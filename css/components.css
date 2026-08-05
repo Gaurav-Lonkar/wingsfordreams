@@ -1201,10 +1201,7 @@
     gap: 2rem;
   }
 
-  .split--reverse > :first-child,
-  .split--reverse > :last-child {
-    order: initial;
-  }
+  /* Keep reverse stacks media-first on mobile (carousel → copy), matching desktop visual order */
 }
 
 @media (max-width: 860px) {
@@ -1237,6 +1234,13 @@
     -webkit-overflow-scrolling: touch;
     overscroll-behavior: contain;
     z-index: 95;
+  }
+
+  body.has-festive-bar .nav {
+    top: calc(var(--header-h) + var(--festive-bar-h, 2.35rem));
+    height: calc(100vh - var(--header-h) - var(--festive-bar-h, 2.35rem));
+    height: calc(100dvh - var(--header-h) - var(--festive-bar-h, 2.35rem));
+    max-height: calc(100dvh - var(--header-h) - var(--festive-bar-h, 2.35rem));
   }
 
   .nav.is-open {
