@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Gaurav Lonkar — Projects</title>
+  <style>
+    :root {
+      --ink: #161616;
+      --muted: #555;
+      --line: #e6e6e6;
+      --bg: #fafafa;
+      --card: #fff;
+      --accent: #ae0d36;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Segoe UI", system-ui, sans-serif;
+      color: var(--ink);
+      background: var(--bg);
+      line-height: 1.5;
+    }
+    main {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 4rem 1.25rem 5rem;
+    }
+    h1 {
+      margin: 0 0 0.35rem;
+      font-size: clamp(1.75rem, 4vw, 2.25rem);
+      letter-spacing: -0.03em;
+    }
+    .lede {
+      margin: 0 0 2rem;
+      color: var(--muted);
+      max-width: 40ch;
+    }
+    .projects {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: grid;
+      gap: 0.85rem;
+    }
+    .project {
+      display: block;
+      padding: 1.15rem 1.25rem;
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      color: inherit;
+      text-decoration: none;
+      transition: border-color 0.15s ease, transform 0.15s ease;
+    }
+    .project:hover {
+      border-color: var(--accent);
+      transform: translateY(-1px);
+    }
+    .project strong {
+      display: block;
+      font-size: 1.05rem;
+      margin-bottom: 0.2rem;
+    }
+    .project span {
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+    .meta {
+      margin-top: 2.5rem;
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+    .meta a { color: var(--accent); }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Projects</h1>
+    <p class="lede">Hosted prototypes and experiments. More projects will be linked here over time.</p>
+    <ul class="projects">
+      <li>
+        <a class="project" href="https://github.com/Gaurav-Lonkar/wingsfordreams/tree/wingsfordreams">
+          <strong>wingsfordreams-prototype</strong>
+          <span>Wings For Dreams — static NGO site prototype (donate, staff tracking, admin). Lives on the <code>wingsfordreams</code> branch.</span>
+        </a>
+      </li>
+    </ul>
+    <p class="meta">
+      Repo:
+      <a href="https://github.com/Gaurav-Lonkar/wingsfordreams">github.com/Gaurav-Lonkar/wingsfordreams</a><br />
+      To view the prototype live on GitHub Pages, set Pages → Branch to <strong>wingsfordreams</strong> / root
+      (hub stays on <strong>main</strong> when you want this index).
+    </p>
+  </main>
+</body>
+</html>
