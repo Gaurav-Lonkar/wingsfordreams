@@ -864,11 +864,40 @@
 
   function setCauseByLabel(wantRaw) {
     if (!wantRaw) return false;
-    const want = decodeURIComponent(String(wantRaw)).toLowerCase().trim();
+    let want = decodeURIComponent(String(wantRaw)).toLowerCase().trim();
+    want = want.replace(/&amp;/g, "&").replace(/\+/g, " ");
+
+    const aliases = {
+      women: "women empowerment and hygiene",
+      "women-empowerment": "women empowerment and hygiene",
+      hygiene: "women empowerment and hygiene",
+      child: "child education",
+      "child-education": "child education",
+      education: "child education",
+      animal: "animal care",
+      "animal-care": "animal care",
+      dog: "animal care",
+      dogs: "animal care",
+      "dog-feeding": "animal care",
+      emergency: "emergency & volunteer camp support",
+      environment: "emergency & volunteer camp support",
+      camp: "emergency & volunteer camp support",
+    };
+    if (aliases[want]) want = aliases[want];
+
     let matched = null;
     document.querySelectorAll(".cause-option").forEach((opt) => {
-      const label = (opt.dataset.label || "").toLowerCase();
-      if (!matched && (label === want || label.includes(want) || want.includes(label))) {
+      const label = (opt.dataset.label || "")
+        .toLowerCase()
+        .replace(/&amp;/g, "&")
+        .trim();
+      if (
+        !matched &&
+        (label === want ||
+          label.includes(want) ||
+          want.includes(label) ||
+          label.split(/\s+/).some((w) => w.length > 3 && want.includes(w)))
+      ) {
         matched = opt;
       }
     });
@@ -1085,8 +1114,10 @@
     customAmount.dataset.raw = amount ? String(amount) : "";
     syncAmountChips(amount);
   }
-  if (params.get("cause")) setCauseByLabel(params.get("cause"));
-
+  if (params.get("cause")) {
+    setCauseByLabel(params.get("cause"));
+    updateDonateSummary();
+  }
   const gatewayFromUrl = parseGatewayPayload(params);
   const hasGatewayReturn = Boolean(
     gatewayFromUrl.email ||

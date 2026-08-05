@@ -30,10 +30,10 @@ HEAD = """<!DOCTYPE html>
     <span data-festive-label>Happy festival</span>
     <button type="button" class="festive-bar__demo" data-festive-demo title="Demo emoji bomb">🎉 Demo</button>
   </div>
-  <a class="float-donate" href="donate.html" data-employee-link><span class="float-donate__pulse" aria-hidden="true"></span> Donate</a>
+  <a class="float-donate" href="{donate_href}" data-employee-link><span class="float-donate__pulse" aria-hidden="true"></span> Donate</a>
 """
 
-def header(active: str) -> str:
+def header(active: str, donate_href: str = "donate.html") -> str:
     def act(name: str) -> str:
         return ' is-active' if active == name else ''
 
@@ -70,10 +70,10 @@ def header(active: str) -> str:
           <div class="nav__actions">
             <button type="button" class="festive-demo-btn" data-festive-demo title="Demo festival emoji bomb">🎉</button>
             <div class="employee-chip" data-employee-chip hidden></div>
-            <a class="btn btn--primary btn--sm header-cta--desktop" href="donate.html" data-employee-link>Donate Now</a>
+            <a class="btn btn--primary btn--sm header-cta--desktop" href="{donate_href}" data-employee-link>Donate Now</a>
           </div>
         </nav>
-        <a class="btn btn--primary btn--sm header-cta--mobile" href="donate.html" data-employee-link>Donate Now</a>
+        <a class="btn btn--primary btn--sm header-cta--mobile" href="{donate_href}" data-employee-link>Donate Now</a>
         <button class="nav-toggle" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="site-nav">
           <span></span><span></span><span></span>
         </button>
@@ -132,9 +132,28 @@ FOOTER = """  <footer class="site-footer">
 </html>
 """
 
-def page(title, description, active, body):
-    return HEAD.format(title=title, description=description) + header(active) + body + FOOTER
+def donate_url(cause: str | None = None, amount: int | None = None) -> str:
+    """Build donate.html URL with optional cause/amount query params."""
+    from urllib.parse import urlencode
 
+    q = {}
+    if cause:
+        q["cause"] = cause
+    if amount is not None:
+        q["amount"] = str(amount)
+    if not q:
+        return "donate.html"
+    return "donate.html?" + urlencode(q)
+
+
+def page(title, description, active, body, donate_cause=None):
+    donate_href = donate_url(donate_cause)
+    return (
+        HEAD.format(title=title, description=description, donate_href=donate_href)
+        + header(active, donate_href=donate_href)
+        + body
+        + FOOTER
+    )
 pages = {}
 
 pages["index.html"] = page(
@@ -500,11 +519,12 @@ pages["women-empowerment.html"] = page(
     <section class="section section--primary">
       <div class="container cta-band reveal">
         <h2>Fund pads, training, and dignity</h2>
-        <a class="btn btn--light" href="donate.html">Donate now</a>
+        <a class="btn btn--light" href="donate.html?cause=Women%20Empowerment%20And%20Hygiene" data-employee-link>Donate now</a>
       </div>
     </section>
   </main>
 """,
+    donate_cause="Women Empowerment And Hygiene",
 )
 
 pages["child-education.html"] = page(
@@ -551,10 +571,14 @@ pages["child-education.html"] = page(
           <div class="photo-grid__item"><img src="assets/photos/child-activity.jpeg" alt="" loading="lazy" /></div>
           <div class="photo-grid__item"><img src="assets/photos/cause-child.png" alt="" loading="lazy" /></div>
         </div>
+        <div class="stack-sm reveal" style="margin-top:1.5rem">
+          <a class="btn btn--primary" href="donate.html?cause=Child%20Education" data-employee-link>Donate for child education</a>
+        </div>
       </div>
     </section>
   </main>
 """,
+    donate_cause="Child Education",
 )
 
 pages["environment.html"] = page(
@@ -594,6 +618,7 @@ pages["environment.html"] = page(
           <h2>Cloth bag distribution</h2>
           <p>We work to reduce plastic bags and increase cloth alternatives while supporting forest-based livelihoods and ecosystem services—carbon sequestration, water, biodiversity, fuel, and fodder.</p>
           <a class="btn btn--primary" href="csr.html">See CSR Mission 17,000 Trees</a>
+          <a class="btn btn--ghost" href="donate.html?cause=Emergency%20%26%20Volunteer%20Camp%20Support" data-employee-link style="margin-left:0.5rem">Donate for field support</a>
         </div>
         <div class="split__media split__media--green reveal">
           <div class="media-carousel" data-carousel data-interval="4200">
@@ -609,6 +634,7 @@ pages["environment.html"] = page(
     </section>
   </main>
 """,
+    donate_cause="Emergency & Volunteer Camp Support",
 )
 
 pages["dog-feeding.html"] = page(
@@ -641,12 +667,13 @@ pages["dog-feeding.html"] = page(
           <div class="program-item reveal"><h3>Care</h3><p>Skin conditions and infections are common outdoors; we connect dogs to veterinary diagnosis and treatment.</p></div>
         </div>
         <div class="stack-sm reveal">
-          <a class="btn btn--primary" href="donate.html">Donate for animal care</a>
+          <a class="btn btn--primary" href="donate.html?cause=Animal%20Care" data-employee-link>Donate for animal care</a>
         </div>
       </div>
     </section>
   </main>
 """,
+    donate_cause="Animal Care",
 )
 
 pages["csr.html"] = page(
@@ -948,6 +975,7 @@ pages["school-kit.html"] = page(
     </section>
   </main>
 """,
+    donate_cause="Child Education",
 )
 
 pages["contact.html"] = page(
