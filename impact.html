@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Impact | Wings For Dreams</title>
+  <meta name="description" content="Explore Wings For Dreams impact areas: women empowerment, child education, environment, and animal care." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Amatic+SC:wght@700&family=Aoboshi+One&family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/tokens.css" />
+  <link rel="stylesheet" href="css/base.css" />
+  <link rel="stylesheet" href="css/components.css" />
+  <link rel="stylesheet" href="css/pages.css" />
+  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.4/build/qrcode.min.js" defer></script>
+  <script src="js/upi-config.js" defer></script>
+  <script src="js/employees.js" defer></script>
+  <script src="js/festivals.js" defer></script>
+  <script src="js/main.js" defer></script>
+</head>
+<body>
+  <div class="scroll-progress" aria-hidden="true"></div>
+  <div class="festive-bar" data-festive-bar hidden>
+    <span data-festive-label>Happy festival</span>
+    <button type="button" class="festive-bar__demo" data-festive-demo title="Demo emoji bomb">🎉 Demo</button>
+  </div>
+  <a class="float-donate" href="donate.html" data-employee-link><span class="float-donate__pulse" aria-hidden="true"></span> Donate</a>
+  <header class="site-header">
+    <div class="container container--wide site-header__inner">
+      <a class="brand" href="index.html" aria-label="Wings For Dreams home">
+        <img class="brand__logo" src="assets/logo.png" alt="" width="72" height="52" onerror="this.style.display='none'" />
+        <span class="brand__name">Wings For Dreams</span>
+      </a>
+      <div class="header-end">
+        <nav class="nav" id="site-nav" aria-label="Primary">
+          <ul class="nav__list">
+            <li class="nav__item nav__item--has-sub">
+              <a class="nav__link is-active" href="impact.html">Impact <span class="nav__chevron" aria-hidden="true"></span></a>
+              <div class="nav__dropdown">
+                <a href="women-empowerment.html">Women Empowerment</a>
+                <a href="child-education.html">Child Education</a>
+                <a href="environment.html">Environment</a>
+                <a href="dog-feeding.html">Dog Feeding</a>
+              </div>
+            </li>
+            <li class="nav__item"><a class="nav__link" href="csr.html">CSR</a></li>
+            <li class="nav__item"><a class="nav__link" href="about.html">About Us</a></li>
+            <li class="nav__item nav__item--has-sub">
+              <a class="nav__link" href="contact.html">Contact Us <span class="nav__chevron" aria-hidden="true"></span></a>
+              <div class="nav__dropdown">
+                <a href="career.html">Career</a>
+                <a href="banks.html">Bank Details</a>
+              </div>
+            </li>
+            <li class="nav__item"><a class="nav__link" href="school-kit.html">Donate School Kit</a></li>
+            <li class="nav__item"><a class="nav__link" href="login.html" data-login-nav>Employee</a></li>
+          </ul>
+          <div class="nav__actions">
+            <button type="button" class="festive-demo-btn" data-festive-demo title="Demo festival emoji bomb">🎉</button>
+            <div class="employee-chip" data-employee-chip hidden></div>
+            <a class="btn btn--primary btn--sm header-cta--desktop" href="donate.html" data-employee-link>Donate Now</a>
+          </div>
+        </nav>
+        <a class="btn btn--primary btn--sm header-cta--mobile" href="donate.html" data-employee-link>Donate Now</a>
+        <button class="nav-toggle" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="site-nav">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section class="page-hero page-hero--photo" data-carousel-bg data-interval="5000" data-images="assets/photos/hero-community-2.jpeg,assets/photos/env-hero.jpg,assets/photos/dogs-hero.jpeg,assets/photos/child-class.jpeg">
+      <div class="container">
+        <p class="eyebrow">Impact</p>
+        <h1>Where your support becomes change</h1>
+        <p>Four cause areas. One mission—dignity for people, animals, and the planet we share.</p>
+      </div>
+    </section>
+    <section class="section">
+      <div class="container card-grid card-grid--2 reveal-stagger">
+        <a class="cause-card reveal" href="women-empowerment.html">
+          <div class="cause-card__media"><img src="assets/photos/women-hero.jpeg" alt="" loading="lazy" /></div>
+          <div class="cause-card__body">
+            <h3>Women Empowerment</h3>
+            <p>Sanitary pads plants, free napkins, awareness, and self-defense training.</p>
+            <span class="cause-card__link">Open →</span>
+          </div>
+        </a>
+        <a class="cause-card reveal" href="child-education.html">
+          <div class="cause-card__media"><img src="assets/photos/child-hero.jpeg" alt="" loading="lazy" /></div>
+          <div class="cause-card__body">
+            <h3>Child Education</h3>
+            <p>Happy Bachapan, educational kits, and extracurricular workshops in slums.</p>
+            <span class="cause-card__link">Open →</span>
+          </div>
+        </a>
+        <a class="cause-card reveal" href="environment.html">
+          <div class="cause-card__media"><img src="assets/photos/env-hero.jpg" alt="" loading="lazy" /></div>
+          <div class="cause-card__body">
+            <h3>Environment</h3>
+            <p>Tree plantation and cloth-bag distribution to reduce plastic waste.</p>
+            <span class="cause-card__link">Open →</span>
+          </div>
+        </a>
+        <a class="cause-card reveal" href="dog-feeding.html">
+          <div class="cause-card__media"><img src="assets/photos/dogs-hero.jpeg" alt="" loading="lazy" /></div>
+          <div class="cause-card__body">
+            <h3>Dog Feeding &amp; Care</h3>
+            <p>Meals, rescue (52+ dogs), and veterinary support for street animals.</p>
+            <span class="cause-card__link">Open →</span>
+          </div>
+        </a>
+      </div>
+    </section>
+  </main>
+  <footer class="site-footer">
+    <div class="container container--wide">
+      <div class="footer-grid">
+        <div>
+          <div class="footer-brand">Wings For Dreams</div>
+          <p>Warm, transparent, and rooted in Pune—helping children learn, women rise, animals heal, and neighborhoods grow greener.</p>
+          <p>PAN AAATW5579L · Reg. MAH542/2019<br />80G · 12A certified</p>
+        </div>
+        <div class="footer-col">
+          <h4>Impact</h4>
+          <ul>
+            <li><a href="women-empowerment.html">Women Empowerment</a></li>
+            <li><a href="child-education.html">Child Education</a></li>
+            <li><a href="environment.html">Environment</a></li>
+            <li><a href="dog-feeding.html">Dog Feeding</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Get involved</h4>
+          <ul>
+            <li><a href="donate.html">Donate</a></li>
+            <li><a href="school-kit.html">School Kit</a></li>
+            <li><a href="csr.html">CSR</a></li>
+            <li><a href="career.html">Career</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Contact</h4>
+          <ul>
+            <li>Ashoka Mall, G4, Bund Garden Rd, Pune</li>
+            <li><a href="tel:+918698637796">+91 8698 637 796</a></li>
+            <li><a href="mailto:info@wingsfordreams.org">info@wingsfordreams.org</a></li>
+            <li><a href="banks.html">Bank details</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <span>© Wings For Dreams · Prototype redesign</span>
+        <span>
+          <a href="https://www.facebook.com/wingsfordreamss/" rel="noopener">Facebook</a> ·
+          <a href="https://www.instagram.com/wingsfordreamss" rel="noopener">Instagram</a> ·
+          <a href="https://www.youtube.com/@wingsfordreamss" rel="noopener">YouTube</a>
+        </span>
+      </div>
+    </div>
+  </footer>
+</body>
+</html>

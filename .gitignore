@@ -1,0 +1,5 @@
+.DS_Store
+penpot/node_modules/
+**/node_modules/
+_raw-export.penpot
+_smoke-*.penpot

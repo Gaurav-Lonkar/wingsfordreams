@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Admin · Donations | Wings For Dreams</title>
+  <meta name="description" content="Download recorded employee-linked donations as CSV anytime." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Amatic+SC:wght@700&family=Aoboshi+One&family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/tokens.css" />
+  <link rel="stylesheet" href="css/base.css" />
+  <link rel="stylesheet" href="css/components.css" />
+  <link rel="stylesheet" href="css/pages.css" />
+  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.4/build/qrcode.min.js" defer></script>
+  <script src="js/upi-config.js" defer></script>
+  <script src="js/employees.js" defer></script>
+  <script src="js/festivals.js" defer></script>
+  <script src="js/main.js" defer></script>
+</head>
+<body>
+  <div class="scroll-progress" aria-hidden="true"></div>
+  <div class="festive-bar" data-festive-bar hidden>
+    <span data-festive-label>Happy festival</span>
+    <button type="button" class="festive-bar__demo" data-festive-demo title="Demo emoji bomb">🎉 Demo</button>
+  </div>
+  <a class="float-donate" href="donate.html" data-employee-link><span class="float-donate__pulse" aria-hidden="true"></span> Donate</a>
+  <header class="site-header">
+    <div class="container container--wide site-header__inner">
+      <a class="brand" href="index.html" aria-label="Wings For Dreams home">
+        <img class="brand__logo" src="assets/logo.png" alt="" width="72" height="52" onerror="this.style.display='none'" />
+        <span class="brand__name">Wings For Dreams</span>
+      </a>
+      <div class="header-end">
+        <nav class="nav" id="site-nav" aria-label="Primary">
+          <ul class="nav__list">
+            <li class="nav__item nav__item--has-sub">
+              <a class="nav__link" href="impact.html">Impact <span class="nav__chevron" aria-hidden="true"></span></a>
+              <div class="nav__dropdown">
+                <a href="women-empowerment.html">Women Empowerment</a>
+                <a href="child-education.html">Child Education</a>
+                <a href="environment.html">Environment</a>
+                <a href="dog-feeding.html">Dog Feeding</a>
+              </div>
+            </li>
+            <li class="nav__item"><a class="nav__link" href="csr.html">CSR</a></li>
+            <li class="nav__item"><a class="nav__link" href="about.html">About Us</a></li>
+            <li class="nav__item nav__item--has-sub">
+              <a class="nav__link" href="contact.html">Contact Us <span class="nav__chevron" aria-hidden="true"></span></a>
+              <div class="nav__dropdown">
+                <a href="career.html">Career</a>
+                <a href="banks.html">Bank Details</a>
+              </div>
+            </li>
+            <li class="nav__item"><a class="nav__link" href="school-kit.html">Donate School Kit</a></li>
+            <li class="nav__item"><a class="nav__link is-active" href="login.html" data-login-nav>Employee</a></li>
+          </ul>
+          <div class="nav__actions">
+            <button type="button" class="festive-demo-btn" data-festive-demo title="Demo festival emoji bomb">🎉</button>
+            <div class="employee-chip" data-employee-chip hidden></div>
+            <a class="btn btn--primary btn--sm header-cta--desktop" href="donate.html" data-employee-link>Donate Now</a>
+          </div>
+        </nav>
+        <a class="btn btn--primary btn--sm header-cta--mobile" href="donate.html" data-employee-link>Donate Now</a>
+        <button class="nav-toggle" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="site-nav">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section class="page-hero">
+      <div class="container">
+        <p class="eyebrow">Admin</p>
+        <h1>Donation records</h1>
+        <p>Payments marked done are stored here. Download the CSV whenever you need it.</p>
+      </div>
+    </section>
+    <section class="section">
+      <div class="container">
+        <div class="admin-toolbar reveal">
+          <p class="note" data-admin-count>No donations recorded yet.</p>
+          <div class="admin-toolbar__actions">
+            <button type="button" class="btn btn--primary" data-admin-download>Download CSV</button>
+            <button type="button" class="btn btn--ghost" data-admin-clear>Clear records</button>
+          </div>
+        </div>
+        <div class="admin-table-wrap reveal">
+          <table class="admin-table" data-admin-table>
+            <thead>
+              <tr>
+                <th>Time (IST)</th>
+                <th>Transaction ID</th>
+                <th>Gateway Txn</th>
+                <th>UTR</th>
+                <th>Donor</th>
+                <th>Email</th>
+                <th>Phone</th>
+                <th>PAN</th>
+                <th>Pin</th>
+                <th>Cause</th>
+                <th>Amount</th>
+                <th>Fundraiser</th>
+                <th>Employee ID</th>
+              </tr>
+            </thead>
+            <tbody data-admin-rows>
+              <tr><td colspan="13">No records yet. Mark a payment done on Donate first.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </main>
+  <footer class="site-footer">
+    <div class="container container--wide">
+      <div class="footer-grid">
+        <div>
+          <div class="footer-brand">Wings For Dreams</div>
+          <p>Warm, transparent, and rooted in Pune—helping children learn, women rise, animals heal, and neighborhoods grow greener.</p>
+          <p>PAN AAATW5579L · Reg. MAH542/2019<br />80G · 12A certified</p>
+        </div>
+        <div class="footer-col">
+          <h4>Impact</h4>
+          <ul>
+            <li><a href="women-empowerment.html">Women Empowerment</a></li>
+            <li><a href="child-education.html">Child Education</a></li>
+            <li><a href="environment.html">Environment</a></li>
+            <li><a href="dog-feeding.html">Dog Feeding</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Get involved</h4>
+          <ul>
+            <li><a href="donate.html">Donate</a></li>
+            <li><a href="school-kit.html">School Kit</a></li>
+            <li><a href="csr.html">CSR</a></li>
+            <li><a href="career.html">Career</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Contact</h4>
+          <ul>
+            <li>Ashoka Mall, G4, Bund Garden Rd, Pune</li>
+            <li><a href="tel:+918698637796">+91 8698 637 796</a></li>
+            <li><a href="mailto:info@wingsfordreams.org">info@wingsfordreams.org</a></li>
+            <li><a href="banks.html">Bank details</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <span>© Wings For Dreams · Prototype redesign</span>
+        <span>
+          <a href="https://www.facebook.com/wingsfordreamss/" rel="noopener">Facebook</a> ·
+          <a href="https://www.instagram.com/wingsfordreamss" rel="noopener">Instagram</a> ·
+          <a href="https://www.youtube.com/@wingsfordreamss" rel="noopener">YouTube</a>
+        </span>
+      </div>
+    </div>
+  </footer>
+</body>
+</html>

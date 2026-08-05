@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Home | Wings For Dreams</title>
+  <meta name="description" content="Join Wings For Dreams NGO in creating real change through education, women’s empowerment, animal care, and environment." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Amatic+SC:wght@700&family=Aoboshi+One&family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/tokens.css" />
+  <link rel="stylesheet" href="css/base.css" />
+  <link rel="stylesheet" href="css/components.css" />
+  <link rel="stylesheet" href="css/pages.css" />
+  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.4/build/qrcode.min.js" defer></script>
+  <script src="js/upi-config.js" defer></script>
+  <script src="js/employees.js" defer></script>
+  <script src="js/festivals.js" defer></script>
+  <script src="js/main.js" defer></script>
+</head>
+<body>
+  <div class="scroll-progress" aria-hidden="true"></div>
+  <div class="festive-bar" data-festive-bar hidden>
+    <span data-festive-label>Happy festival</span>
+    <button type="button" class="festive-bar__demo" data-festive-demo title="Demo emoji bomb">🎉 Demo</button>
+  </div>
+  <a class="float-donate" href="donate.html" data-employee-link><span class="float-donate__pulse" aria-hidden="true"></span> Donate</a>
+  <header class="site-header">
+    <div class="container container--wide site-header__inner">
+      <a class="brand" href="index.html" aria-label="Wings For Dreams home">
+        <img class="brand__logo" src="assets/logo.png" alt="" width="72" height="52" onerror="this.style.display='none'" />
+        <span class="brand__name">Wings For Dreams</span>
+      </a>
+      <div class="header-end">
+        <nav class="nav" id="site-nav" aria-label="Primary">
+          <ul class="nav__list">
+            <li class="nav__item nav__item--has-sub">
+              <a class="nav__link" href="impact.html">Impact <span class="nav__chevron" aria-hidden="true"></span></a>
+              <div class="nav__dropdown">
+                <a href="women-empowerment.html">Women Empowerment</a>
+                <a href="child-education.html">Child Education</a>
+                <a href="environment.html">Environment</a>
+                <a href="dog-feeding.html">Dog Feeding</a>
+              </div>
+            </li>
+            <li class="nav__item"><a class="nav__link" href="csr.html">CSR</a></li>
+            <li class="nav__item"><a class="nav__link" href="about.html">About Us</a></li>
+            <li class="nav__item nav__item--has-sub">
+              <a class="nav__link" href="contact.html">Contact Us <span class="nav__chevron" aria-hidden="true"></span></a>
+              <div class="nav__dropdown">
+                <a href="career.html">Career</a>
+                <a href="banks.html">Bank Details</a>
+              </div>
+            </li>
+            <li class="nav__item"><a class="nav__link" href="school-kit.html">Donate School Kit</a></li>
+            <li class="nav__item"><a class="nav__link" href="login.html" data-login-nav>Employee</a></li>
+          </ul>
+          <div class="nav__actions">
+            <button type="button" class="festive-demo-btn" data-festive-demo title="Demo festival emoji bomb">🎉</button>
+            <div class="employee-chip" data-employee-chip hidden></div>
+            <a class="btn btn--primary btn--sm header-cta--desktop" href="donate.html" data-employee-link>Donate Now</a>
+          </div>
+        </nav>
+        <a class="btn btn--primary btn--sm header-cta--mobile" href="donate.html" data-employee-link>Donate Now</a>
+        <button class="nav-toggle" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="site-nav">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero" data-hero-carousel data-interval="5500">
+      <div class="hero__slides" aria-hidden="true">
+        <div class="hero__slide is-active" style="background-image:url('assets/photos/hero-community-1.jpeg')"></div>
+        <div class="hero__slide" style="background-image:url('assets/photos/hero-community-2.jpeg')"></div>
+        <div class="hero__slide" style="background-image:url('assets/photos/hero-community-3.jpeg')"></div>
+        <div class="hero__slide" style="background-image:url('assets/photos/child-class.jpeg')"></div>
+        <div class="hero__slide" style="background-image:url('assets/photos/women-hero.jpeg')"></div>
+      </div>
+      <div class="container container--wide hero__content">
+        <div class="hero__copy">
+          <div class="friendly-chip reveal"><span class="friendly-chip__dot"></span> Open hearts in Pune since 2019</div>
+          <p class="hero__brand reveal">Wings For Dreams</p>
+          <h1 class="reveal">A safe and joyful place for your lovely children</h1>
+          <p class="hero__lede reveal">We walk beside families with education, women’s empowerment, animal care, and greener streets—kindness you can feel.</p>
+          <div class="hero__actions reveal">
+            <a class="btn btn--light" href="donate.html">Give with love</a>
+            <a class="btn btn--ghost btn--on-dark" href="impact.html">Explore impact</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="about">
+      <div class="container split">
+        <div class="reveal">
+          <p class="eyebrow">About us</p>
+          <h2>Change begins with a single act of kindness</h2>
+          <p>Founded on 29 March 2019 by Mr. Richard Almeida, Wings For Dreams is a student-led nonprofit. We care for children’s education, women’s dignity, street animals, and the environment—quietly, consistently, with heart.</p>
+          <div class="about-stats">
+            <div><strong>2019</strong><span>Founded in Pune</span></div>
+            <div><strong data-count="10000" data-suffix="+">0</strong><span>Children supported</span></div>
+            <div><strong data-count="52" data-suffix="+">0</strong><span>Dogs rescued</span></div>
+            <div><strong data-count="17000">0</strong><span>Trees planted (CSR)</span></div>
+          </div>
+        </div>
+        <div class="split__media reveal">
+          <div class="media-carousel" data-carousel data-interval="4500">
+            <div class="media-carousel__slides">
+              <img src="assets/photos/hero-community-2.jpeg" alt="Wings For Dreams community gathering" loading="lazy" />
+              <img src="assets/photos/child-activity.jpeg" alt="" loading="lazy" />
+              <img src="assets/photos/dogs-feed.jpeg" alt="" loading="lazy" />
+              <img src="assets/photos/env-hero.jpg" alt="" loading="lazy" />
+            </div>
+            <div class="media-carousel__dots" data-carousel-dots></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section section--muted">
+      <div class="container">
+        <div class="section__head reveal">
+          <p class="eyebrow">Our causes</p>
+          <h2>Four ways your kindness lands</h2>
+          <p>Pick a path that speaks to you—every rupee is guided with care and accountability.</p>
+        </div>
+        <div class="card-grid card-grid--4 reveal-stagger">
+          <a class="cause-card reveal" href="women-empowerment.html">
+            <div class="cause-card__media"><img src="assets/photos/women-hero.jpeg" alt="" loading="lazy" /></div>
+            <div class="cause-card__body">
+              <h3>Women Empowerment</h3>
+              <p>Pads, livelihood, awareness, and self-defense for rural women and girls.</p>
+              <span class="cause-card__link">Learn more <span>→</span></span>
+            </div>
+          </a>
+          <a class="cause-card reveal" href="child-education.html">
+            <div class="cause-card__media"><img src="assets/photos/child-hero.jpeg" alt="" loading="lazy" /></div>
+            <div class="cause-card__body">
+              <h3>Child Education</h3>
+              <p>Happy Bachapan, school kits, and creative workshops that keep childhood bright.</p>
+              <span class="cause-card__link">Learn more <span>→</span></span>
+            </div>
+          </a>
+          <a class="cause-card reveal" href="dog-feeding.html">
+            <div class="cause-card__media"><img src="assets/photos/dogs-hero.jpeg" alt="" loading="lazy" /></div>
+            <div class="cause-card__body">
+              <h3>Animal Care</h3>
+              <p>Daily meals, rescue, and veterinary care for street dogs who need a friend.</p>
+              <span class="cause-card__link">Learn more <span>→</span></span>
+            </div>
+          </a>
+          <a class="cause-card reveal" href="environment.html">
+            <div class="cause-card__media"><img src="assets/photos/env-hero.jpg" alt="" loading="lazy" /></div>
+            <div class="cause-card__body">
+              <h3>Environment</h3>
+              <p>Trees and cloth bags—small green habits that cool our shared home.</p>
+              <span class="cause-card__link">Learn more <span>→</span></span>
+            </div>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <section class="section section--blush">
+      <div class="container">
+        <div class="section__head reveal">
+          <p class="eyebrow">Peek inside</p>
+          <h2>Stories that stay with us</h2>
+        </div>
+        <div class="impact-tabs reveal" data-impact-tabs>
+          <button type="button" class="impact-tab is-active" data-tab="bachapan">Happy Bachapan</button>
+          <button type="button" class="impact-tab" data-tab="women">Women rising</button>
+          <button type="button" class="impact-tab" data-tab="trees">17,000 trees</button>
+          <button type="button" class="impact-tab" data-tab="dogs">Street dog care</button>
+        </div>
+        <div class="impact-spotlight reveal">
+          <div class="impact-spotlight__content" data-impact-panels>
+            <div class="impact-panel is-active" data-panel="bachapan" data-visual="assets/photos/child-class.jpeg">
+              <h3>Standing with migrant children</h3>
+              <p>We met children on a construction site—hungry for food, language, and dignity. Happy Bachapan brings meals, festivals, and learning so childhood isn’t lost to migration.</p>
+              <a class="btn btn--primary btn--sm" href="child-education.html">See the program</a>
+            </div>
+            <div class="impact-panel" data-panel="women" data-visual="assets/photos/women-hero.jpeg">
+              <h3>Dignity starts with basics</h3>
+              <p>Rural pads plants, free napkins, hygiene awareness, and free self-defense training—practical care that helps women and girls move through the world safer and stronger.</p>
+              <a class="btn btn--primary btn--sm" href="women-empowerment.html">Meet the work</a>
+            </div>
+            <div class="impact-panel" data-panel="trees" data-visual="assets/photos/env-hero.jpg">
+              <h3>Mission 17,000 Trees</h3>
+              <p>At Holkarwadi, volunteers planted nearly 17,000 trees across 5 acres—neem, tamarind, sacred fig, and more—turning CSR into living shade.</p>
+              <a class="btn btn--primary btn--sm" href="csr.html">CSR partnerships</a>
+            </div>
+            <div class="impact-panel" data-panel="dogs" data-visual="assets/photos/dogs-feed.jpeg">
+              <h3>Feed. Rescue. Heal.</h3>
+              <p>Street dogs face hunger and injury daily. Together we’ve rescued 52+ dogs and keep meals and vet care moving through the community.</p>
+              <a class="btn btn--primary btn--sm" href="dog-feeding.html">Help an animal</a>
+            </div>
+          </div>
+          <div class="impact-spotlight__visual">
+            <img src="assets/photos/child-class.jpeg" alt="" data-impact-visual loading="lazy" />
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="container">
+        <div class="section__head reveal">
+          <p class="eyebrow">Why families trust us</p>
+          <h2>Soft values. Steady hands.</h2>
+        </div>
+        <div class="value-row reveal-stagger">
+          <div class="value-item reveal"><h3>Kindness</h3><p>Small acts, shared widely—that’s how neighborhoods change.</p></div>
+          <div class="value-item reveal"><h3>Creativity</h3><p>Imagination is a classroom too. We make space for it.</p></div>
+          <div class="value-item reveal"><h3>Care</h3><p>Every childhood deserves warmth, safety, and someone who shows up.</p></div>
+          <div class="value-item reveal"><h3>Courage</h3><p>We try new ways when old ones leave people behind.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section section--cyan">
+      <div class="container split">
+        <div class="reveal">
+          <p class="eyebrow">Transparency</p>
+          <h2>Clear books. Open hearts.</h2>
+          <p>Registered in India with 80G and 12A. Ask for documents anytime—your trust is part of the gift.</p>
+          <div class="trust-strip trust-strip--spaced">
+            <span class="trust-pill">80G</span>
+            <span class="trust-pill">12A</span>
+            <span class="trust-pill">NGO Certificate</span>
+            <span class="trust-pill">PAN</span>
+            <span class="trust-pill">Annual Report</span>
+          </div>
+          <p class="note">PAN AAATW5579L · Registration MAH542/2019</p>
+        </div>
+        <div class="reveal">
+          <div class="donate-panel">
+            <h3>Give any amount. Save on tax.</h3>
+            <p>Section 80G benefits apply. You’ll receive an official receipt for completed gifts on the live site.</p>
+            <a class="btn btn--primary" href="donate.html">Start a donation</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="container">
+        <div class="section__head reveal">
+          <p class="eyebrow">Good to know</p>
+          <h2>Friendly answers</h2>
+        </div>
+        <div class="accordion reveal">
+          <div class="accordion__item">
+            <button class="accordion__trigger" type="button" aria-expanded="false">Is my donation tax-exempt? <span class="accordion__icon">+</span></button>
+            <div class="accordion__panel"><div class="accordion__panel-inner">Yes—eligible donations can claim benefits under Section 80G. We issue receipts for verified gifts.</div></div>
+          </div>
+          <div class="accordion__item">
+            <button class="accordion__trigger" type="button" aria-expanded="false">Can I sponsor a school kit? <span class="accordion__icon">+</span></button>
+            <div class="accordion__panel"><div class="accordion__panel-inner">Absolutely. Kits start at ₹700 or ₹2,000, and we top up each kit so a child gets everything they need—plus photo feedback when possible.</div></div>
+          </div>
+          <div class="accordion__item">
+            <button class="accordion__trigger" type="button" aria-expanded="false">How else can I help? <span class="accordion__icon">+</span></button>
+            <div class="accordion__panel"><div class="accordion__panel-inner">Volunteer, intern, or partner through CSR. Visit Career or Contact—we’d love to meet you.</div></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section section--primary">
+      <div class="container cta-band reveal">
+        <h2>Ready to brighten a child’s day?</h2>
+        <div class="cta-actions">
+          <a class="btn btn--light" href="donate.html">Donate</a>
+          <a class="btn btn--ghost btn--on-dark" href="school-kit.html">Sponsor a kit</a>
+        </div>
+      </div>
+    </section>
+  </main>
+  <footer class="site-footer">
+    <div class="container container--wide">
+      <div class="footer-grid">
+        <div>
+          <div class="footer-brand">Wings For Dreams</div>
+          <p>Warm, transparent, and rooted in Pune—helping children learn, women rise, animals heal, and neighborhoods grow greener.</p>
+          <p>PAN AAATW5579L · Reg. MAH542/2019<br />80G · 12A certified</p>
+        </div>
+        <div class="footer-col">
+          <h4>Impact</h4>
+          <ul>
+            <li><a href="women-empowerment.html">Women Empowerment</a></li>
+            <li><a href="child-education.html">Child Education</a></li>
+            <li><a href="environment.html">Environment</a></li>
+            <li><a href="dog-feeding.html">Dog Feeding</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Get involved</h4>
+          <ul>
+            <li><a href="donate.html">Donate</a></li>
+            <li><a href="school-kit.html">School Kit</a></li>
+            <li><a href="csr.html">CSR</a></li>
+            <li><a href="career.html">Career</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Contact</h4>
+          <ul>
+            <li>Ashoka Mall, G4, Bund Garden Rd, Pune</li>
+            <li><a href="tel:+918698637796">+91 8698 637 796</a></li>
+            <li><a href="mailto:info@wingsfordreams.org">info@wingsfordreams.org</a></li>
+            <li><a href="banks.html">Bank details</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <span>© Wings For Dreams · Prototype redesign</span>
+        <span>
+          <a href="https://www.facebook.com/wingsfordreamss/" rel="noopener">Facebook</a> ·
+          <a href="https://www.instagram.com/wingsfordreamss" rel="noopener">Instagram</a> ·
+          <a href="https://www.youtube.com/@wingsfordreamss" rel="noopener">YouTube</a>
+        </span>
+      </div>
+    </div>
+  </footer>
+</body>
+</html>
