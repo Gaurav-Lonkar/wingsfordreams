@@ -93,6 +93,15 @@
     </section>
     <section class="section section--donate">
       <div class="container panel-narrow">
+        <div class="employee-share" data-employee-share hidden>
+          <p class="form-label-title">Your public donation link</p>
+          <p class="note">Share this with donors — they only see the normal donate form.</p>
+          <div class="employee-share__row">
+            <input type="text" readonly data-employee-share-url aria-label="Your public donation link" />
+            <button type="button" class="btn btn--ghost btn--sm" data-employee-share-copy>Copy</button>
+          </div>
+        </div>
+
         <form class="donate-panel form give-form" data-upi-form data-donate-form novalidate>
           <input type="hidden" name="employeeId" data-employee-id value="" />
 

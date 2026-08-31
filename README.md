@@ -48,8 +48,8 @@ Import at [penpot.app](https://penpot.app/) → project menu → **Import**, the
 Staff pages are unlinked and live under an unguessable path. Bookmark the URL; do not publish it.
 
 1. Open `staff-0ef85eac/` and sign in with `E001`, `E002`, or `E003`.
-2. After login you land on your fundraiser page (`donations/<name>/`). The header chip shows your name.
-3. The public donate form has no staff UI. Records still attribute a signed-in ID (or `?employeeId=`) silently.
+2. After login, copy your **public donation link** (`donations/<name>/`) and share it with donors. The same copy box also appears on donate pages while you are signed in.
+3. Donors opening that link only see the normal donate form. Records still attribute a signed-in ID silently.
 4. Admins open **`staff-0ef85eac/admin.html`** and click **Download CSV**:
 
 ```csv

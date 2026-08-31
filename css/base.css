@@ -104,6 +104,11 @@ textarea {
   border: 0;
 }
 
+/* Author styles like `.form { display: grid }` otherwise beat the UA [hidden] rule. */
+[hidden] {
+  display: none !important;
+}
+
 /* Progress + floating chip */
 .scroll-progress {
   position: fixed;

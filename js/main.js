@@ -82,6 +82,46 @@
     return slug ? `donations/${slug}/` : "donate.html";
   }
 
+  /** Absolute public URL donors can open (no staff tools on that page). */
+  function publicFundraiserUrl(emp) {
+    try {
+      return new URL(fundraiserHrefFor(emp), document.baseURI || location.href)
+        .href;
+    } catch {
+      return fundraiserHrefFor(emp);
+    }
+  }
+
+  function syncStaffShareUi(session) {
+    const publicUrl = session ? publicFundraiserUrl(session) : "";
+
+    document.querySelectorAll("[data-employee-share]").forEach((panel) => {
+      // Staff-home embeds a share block that follows the parent; donate pages
+      // keep their own hidden flag until someone is signed in.
+      const onStaffHome = Boolean(panel.closest("[data-staff-home]"));
+      if (!onStaffHome) panel.hidden = !session;
+      const input = panel.querySelector("[data-employee-share-url]");
+      if (input && publicUrl) input.value = publicUrl;
+    });
+
+    const loginForm = document.querySelector("[data-employee-login]");
+    const staffHome = document.querySelector("[data-staff-home]");
+    const staffDemo = document.querySelector("[data-staff-demo]");
+    if (loginForm) loginForm.hidden = Boolean(session);
+    if (staffHome) {
+      staffHome.hidden = !session;
+      const greet = staffHome.querySelector("[data-staff-home-greeting]");
+      if (greet && session) {
+        greet.textContent = `Signed in as ${session.name || session.id}`;
+      }
+      const openPage = staffHome.querySelector("[data-staff-open-page]");
+      if (openPage && session) {
+        openPage.setAttribute("href", fundraiserHrefFor(session));
+      }
+    }
+    if (staffDemo) staffDemo.hidden = Boolean(session);
+  }
+
   function renderEmployeeChrome() {
     const session = getSessionEmployee();
     const activeId = getActiveEmployeeId();
@@ -112,6 +152,7 @@
     }
 
     applyEmployeeLinks(active?.id || session?.id || "");
+    syncStaffShareUi(session);
 
     // Silent attribution only — donate has no staff UI. Prefer the signed-in
     // ID, else an ?employeeId= on a shared link.
@@ -390,6 +431,7 @@
   }
 
   // Private staff login — lives under WFD_STAFF_LOGIN, never linked from the nav.
+  // After sign-in we stay here so the public share link is ready to copy.
   const loginForm = document.querySelector("[data-employee-login]");
   if (loginForm) {
     loginForm.addEventListener("submit", (e) => {
@@ -405,9 +447,34 @@
         return;
       }
       setSessionEmployee(emp);
-      location.href = fundraiserHrefFor(emp);
+      renderEmployeeChrome();
     });
   }
+
+  document.querySelector("[data-staff-logout]")?.addEventListener("click", () => {
+    clearSessionEmployee();
+    renderEmployeeChrome();
+  });
+
+  document.querySelectorAll("[data-employee-share-copy]").forEach((btn) => {
+    btn.addEventListener("click", async () => {
+      const panel = btn.closest("[data-employee-share]");
+      const input = panel?.querySelector("[data-employee-share-url]");
+      if (!input?.value) return;
+      try {
+        await navigator.clipboard.writeText(input.value);
+        const prev = btn.textContent;
+        btn.textContent = "Copied";
+        setTimeout(() => {
+          btn.textContent = prev || "Copy";
+        }, 1500);
+      } catch {
+        input.focus();
+        input.select();
+        btn.textContent = "Select & copy";
+      }
+    });
+  });
 
   // Admin CSV export (anytime)
   const adminDownload = document.querySelector("[data-admin-download]");

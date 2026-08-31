@@ -90,7 +90,7 @@
       <div class="container">
         <p class="eyebrow">Staff</p>
         <h1>Staff login</h1>
-        <p>Sign in with your employee ID. After login you land on your fundraiser page.</p>
+        <p>Sign in with your employee ID to get your public donation link for donors.</p>
       </div>
     </section>
     <section class="section">
@@ -102,7 +102,24 @@
           <button class="btn btn--primary" type="submit">Log in</button>
           <p class="note" data-login-note>Demo IDs: E001, E002, E003</p>
         </form>
-        <div class="employee-demo-list reveal">
+
+        <div class="donate-panel form" data-staff-home hidden>
+          <p class="form-label-title" data-staff-home-greeting>Signed in</p>
+          <p class="note">Copy your public link and share it with donors. They will not see staff tools.</p>
+          <div class="employee-share" data-employee-share>
+            <div class="employee-share__row">
+              <input type="text" readonly data-employee-share-url aria-label="Your public donation link" />
+              <button type="button" class="btn btn--ghost btn--sm" data-employee-share-copy>Copy</button>
+            </div>
+          </div>
+          <div class="stack-sm" style="display:flex;flex-wrap:wrap;gap:0.65rem;margin-top:1rem">
+            <a class="btn btn--primary" data-staff-open-page href="#">Open my donation page</a>
+            <a class="btn btn--ghost" href="staff-0ef85eac/admin.html">Admin CSV</a>
+            <button type="button" class="btn btn--ghost" data-staff-logout>Log out</button>
+          </div>
+        </div>
+
+        <div class="employee-demo-list reveal" data-staff-demo>
           <p class="form-label-title">Demo employees</p>
           <ul>
             <li><strong>E001</strong> — Priya Sharma</li>
