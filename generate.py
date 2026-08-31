@@ -8,6 +8,11 @@ ROOT = Path(__file__).resolve().parent
 # Change this when the site moves to its own domain.
 SITE_URL = "https://gaurav-lonkar.github.io/wingsfordreams"
 
+# Unguessable staff area. Never put this path in the public nav or robots.txt —
+# security is obscurity only on a static host, but that is enough to keep casual
+# visitors off the login screen.
+STAFF_DIR = "staff-0ef85eac"
+
 HEAD = """<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -87,7 +92,6 @@ def header(active: str, donate_href: str = "donate.html") -> str:
               </div>
             </li>
             <li class="nav__item"><a class="nav__link{act('school')}" href="school-kit.html">Donate School Kit</a></li>
-            <!-- Staff reach login.html by direct URL; it is deliberately not advertised here. -->
           </ul>
           <div class="nav__actions">
             <div class="employee-chip" data-employee-chip hidden></div>
@@ -791,11 +795,8 @@ DONATE_BODY = """
     </section>
     <section class="section section--donate">
       <div class="container panel-narrow">
-        <div class="employee-banner is-visible" data-employee-banner hidden></div>
-
         <form class="donate-panel form give-form" data-upi-form data-donate-form novalidate>
           <input type="hidden" name="employeeId" data-employee-id value="" />
-          <input type="hidden" name="donateMode" data-donate-mode-value value="donor" />
 
           <div class="gateway-banner" data-gateway-banner hidden></div>
 
@@ -928,7 +929,6 @@ DONATE_BODY = """
               <div class="payment-success__wa-qr-frame" data-whatsapp-qr-mount aria-hidden="true"></div>
               <p class="payment-success__wa-qr-hint">On desktop? Scan with your phone’s WhatsApp</p>
             </div>
-            <p class="note" data-staff-only hidden>Records are saved for <a href="admin.html">Admin → Donations</a>.</p>
           </div>
         </form>
         <p class="donate-bank-link"><a href="banks.html">Prefer bank transfer? See account details</a></p>
@@ -948,6 +948,15 @@ DONATE_BODY = """
 
 def slugify(name: str) -> str:
     return "-".join(name.lower().split())
+
+
+def with_site_base(html: str, base: str) -> str:
+    """Point relative asset URLs at the site root for nested pages."""
+    return html.replace(
+        '<meta name="viewport" content="width=device-width, initial-scale=1" />',
+        '<meta name="viewport" content="width=device-width, initial-scale=1" />\n'
+        f'  <base href="{base}" />',
+    )
 
 
 def donate_body(fundraiser: str = "") -> str:
@@ -971,18 +980,16 @@ pages["donate.html"] = page("Donate", DONATE_DESCRIPTION, "donate", donate_body(
 FUNDRAISERS = ["Amir", "Priya Sharma", "Arjun Mehta", "Neha Patil"]
 
 for person in FUNDRAISERS:
-    nested = page(
-        person,
-        f"Donate to Wings For Dreams through {person} \u2014 scan the UPI QR code to pay.",
-        "donate",
-        donate_body(person),
-        noindex=True,
-    ).replace(
-        '<meta name="viewport" content="width=device-width, initial-scale=1" />',
-        '<meta name="viewport" content="width=device-width, initial-scale=1" />\n'
-        '  <base href="../../" />',
+    pages[f"donations/{slugify(person)}/index.html"] = with_site_base(
+        page(
+            person,
+            f"Donate to Wings For Dreams through {person} \u2014 scan the UPI QR code to pay.",
+            "donate",
+            donate_body(person),
+            noindex=True,
+        ),
+        "../../",
     )
-    pages[f"donations/{slugify(person)}/index.html"] = nested
 
 pages["school-kit.html"] = page(
     "Donate School Kit",
@@ -1118,17 +1125,20 @@ pages["banks.html"] = page(
     no_motion=True,
 )
 
-pages["login.html"] = page(
-    "Employee login",
-    "Log in with your Wings For Dreams employee ID to track donations.",
-    "login",
-    """
+# Private staff login + admin live under STAFF_DIR. Bookmark the folder URL;
+# nothing on the public site links here, and robots.txt must not name the path.
+pages[f"{STAFF_DIR}/index.html"] = with_site_base(
+    page(
+        "Staff login",
+        "Staff sign-in for Wings For Dreams donation tracking.",
+        "login",
+        f"""
   <main>
     <section class="page-hero">
       <div class="container">
         <p class="eyebrow">Staff</p>
-        <h1>Employee login</h1>
-        <p>Sign in with your employee ID. Donation links will include your ID for tracking.</p>
+        <h1>Staff login</h1>
+        <p>Sign in with your employee ID. After login you land on your fundraiser page.</p>
       </div>
     </section>
     <section class="section">
@@ -1147,19 +1157,23 @@ pages["login.html"] = page(
             <li><strong>E002</strong> — Arjun Mehta</li>
             <li><strong>E003</strong> — Neha Patil</li>
           </ul>
-          <p class="note stack-sm"><a href="admin.html">Admin: download donations CSV →</a></p>
+          <p class="note stack-sm"><a href="{STAFF_DIR}/admin.html">Admin: download donations CSV →</a></p>
         </div>
       </div>
     </section>
   </main>
 """,
+        noindex=True,
+    ),
+    "../",
 )
 
-pages["admin.html"] = page(
-    "Admin · Donations",
-    "Download recorded employee-linked donations as CSV anytime.",
-    "login",
-    """
+pages[f"{STAFF_DIR}/admin.html"] = with_site_base(
+    page(
+        "Admin · Donations",
+        "Download recorded donations as CSV anytime.",
+        "login",
+        """
   <main>
     <section class="page-hero">
       <div class="container">
@@ -1209,6 +1223,9 @@ pages["admin.html"] = page(
     </section>
   </main>
 """,
+        noindex=True,
+    ),
+    "../",
 )
 
 pages["career.html"] = page(
@@ -1250,8 +1267,8 @@ pages["career.html"] = page(
 """,
 )
 
-# Staff-only screens. The fundraiser clones already pass noindex=True.
-NOINDEX_PAGES = {"admin.html", "login.html"}
+# Extra noindex keys (fundraiser clones and the staff folder already pass noindex=True).
+NOINDEX_PAGES = set()
 
 HERO_PRELOAD = (
     '  <link rel="preload" as="image" href="assets/photos/hero-community-1.webp"'
@@ -1333,13 +1350,21 @@ MANIFEST = """{
 """
 (ROOT / "site.webmanifest").write_text(MANIFEST, encoding="utf-8")
 
+# Do not Disallow the staff folder here — robots.txt is public and would
+# advertise the unguessable path. Staff pages are already noindex.
 # Note: on a github.io project site only the domain-root robots.txt is honoured;
 # this file becomes authoritative once the site runs on its own domain.
 (ROOT / "robots.txt").write_text(
-    "User-agent: *\nAllow: /\nDisallow: /admin.html\nDisallow: /login.html\n"
-    f"\nSitemap: {SITE_URL}/sitemap.xml\n",
+    f"User-agent: *\nAllow: /\n\nSitemap: {SITE_URL}/sitemap.xml\n",
     encoding="utf-8",
 )
+
+# Drop the old public staff entry points so they stop shipping on Pages.
+for obsolete in ("login.html", "admin.html"):
+    stale = ROOT / obsolete
+    if stale.exists():
+        stale.unlink()
+        print("removed", obsolete)
 
 urls = "\n".join(
     f"  <url><loc>{canonical_for(name)}</loc></url>" for name in sorted(indexable)

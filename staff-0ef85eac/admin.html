@@ -3,10 +3,11 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Employee login | Wings For Dreams</title>
-  <meta name="description" content="Log in with your Wings For Dreams employee ID to track donations." />
+  <base href="../" />
+  <title>Admin · Donations | Wings For Dreams</title>
+  <meta name="description" content="Download recorded donations as CSV anytime." />
+  <link rel="canonical" href="https://gaurav-lonkar.github.io/wingsfordreams/staff-0ef85eac/admin.html" />
   <meta name="robots" content="noindex, follow" />
-  <link rel="canonical" href="https://gaurav-lonkar.github.io/wingsfordreams/login.html" />
   <meta name="theme-color" content="#ae0d36" />
   <link rel="icon" href="assets/favicon.ico" sizes="any" />
   <link rel="icon" type="image/png" sizes="32x32" href="assets/icon-32.png" />
@@ -15,15 +16,15 @@
   <meta property="og:type" content="website" />
   <meta property="og:site_name" content="Wings For Dreams" />
   <meta property="og:locale" content="en_IN" />
-  <meta property="og:title" content="Employee login | Wings For Dreams" />
-  <meta property="og:description" content="Log in with your Wings For Dreams employee ID to track donations." />
-  <meta property="og:url" content="https://gaurav-lonkar.github.io/wingsfordreams/login.html" />
+  <meta property="og:title" content="Admin · Donations | Wings For Dreams" />
+  <meta property="og:description" content="Download recorded donations as CSV anytime." />
+  <meta property="og:url" content="https://gaurav-lonkar.github.io/wingsfordreams/staff-0ef85eac/admin.html" />
   <meta property="og:image" content="https://gaurav-lonkar.github.io/wingsfordreams/assets/social-card.jpg" />
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
   <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="Employee login | Wings For Dreams" />
-  <meta name="twitter:description" content="Log in with your Wings For Dreams employee ID to track donations." />
+  <meta name="twitter:title" content="Admin · Donations | Wings For Dreams" />
+  <meta name="twitter:description" content="Download recorded donations as CSV anytime." />
   <meta name="twitter:image" content="https://gaurav-lonkar.github.io/wingsfordreams/assets/social-card.jpg" />
   <link rel="stylesheet" href="css/fonts.css" />
   <link rel="stylesheet" href="css/tokens.css" />
@@ -70,7 +71,6 @@
               </div>
             </li>
             <li class="nav__item"><a class="nav__link" href="school-kit.html">Donate School Kit</a></li>
-            <!-- Staff reach login.html by direct URL; it is deliberately not advertised here. -->
           </ul>
           <div class="nav__actions">
             <div class="employee-chip" data-employee-chip hidden></div>
@@ -88,28 +88,47 @@
   <main>
     <section class="page-hero">
       <div class="container">
-        <p class="eyebrow">Staff</p>
-        <h1>Employee login</h1>
-        <p>Sign in with your employee ID. Donation links will include your ID for tracking.</p>
+        <p class="eyebrow">Admin</p>
+        <h1>Donation records</h1>
+        <p>Payments marked done are stored here. Download the CSV whenever you need it.</p>
       </div>
     </section>
     <section class="section">
-      <div class="container panel-narrow">
-        <form class="donate-panel form" data-employee-login>
-          <label class="form-field">Employee ID
-            <input type="text" name="employeeId" placeholder="e.g. E001" data-login-id autocomplete="username" required />
-          </label>
-          <button class="btn btn--primary" type="submit">Log in</button>
-          <p class="note" data-login-note>Demo IDs: E001, E002, E003</p>
-        </form>
-        <div class="employee-demo-list reveal">
-          <p class="form-label-title">Demo employees</p>
-          <ul>
-            <li><strong>E001</strong> — Priya Sharma</li>
-            <li><strong>E002</strong> — Arjun Mehta</li>
-            <li><strong>E003</strong> — Neha Patil</li>
-          </ul>
-          <p class="note stack-sm"><a href="admin.html">Admin: download donations CSV →</a></p>
+      <div class="container">
+        <div class="admin-toolbar reveal">
+          <p class="note" data-admin-count>No donations recorded yet.</p>
+          <div class="admin-toolbar__actions">
+            <button type="button" class="btn btn--primary" data-admin-download>Download CSV</button>
+            <button type="button" class="btn btn--ghost" data-admin-clear>Clear records</button>
+          </div>
+        </div>
+        <div class="admin-table-wrap reveal">
+          <table class="admin-table" data-admin-table>
+            <thead>
+              <tr>
+                <th>Time (IST)</th>
+                <th>Transaction ID</th>
+                <th>Gateway Txn</th>
+                <th>UTR</th>
+                <th>Donor</th>
+                <th>Email</th>
+                <th>Phone</th>
+                <th>PAN</th>
+                <th>Aadhar</th>
+                <th>City</th>
+                <th>Pin</th>
+                <th>Cause</th>
+                <th>Amount</th>
+                <th>Payment Type</th>
+                <th>Payment Id</th>
+                <th>Fundraiser</th>
+                <th>Employee ID</th>
+              </tr>
+            </thead>
+            <tbody data-admin-rows>
+              <tr><td colspan="17">No records yet. Record a donation on Donate first.</td></tr>
+            </tbody>
+          </table>
         </div>
       </div>
     </section>

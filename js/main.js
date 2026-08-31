@@ -67,26 +67,42 @@
     });
   }
 
+  function staffLoginHref() {
+    return window.WFD_STAFF_LOGIN || "staff-0ef85eac/";
+  }
+
+  function fundraiserHrefFor(emp) {
+    if (!emp?.name) return "donate.html";
+    const slug = String(emp.name)
+      .trim()
+      .toLowerCase()
+      .split(/\s+/)
+      .filter(Boolean)
+      .join("-");
+    return slug ? `donations/${slug}/` : "donate.html";
+  }
+
   function renderEmployeeChrome() {
     const session = getSessionEmployee();
     const activeId = getActiveEmployeeId();
     const active = findEmployee(activeId) || session;
     const chip = document.querySelector("[data-employee-chip]");
-    const banner = document.querySelector("[data-employee-banner]");
-    const loginNav = document.querySelector("[data-login-nav]");
 
     if (chip) {
       if (session) {
         chip.hidden = false;
         chip.classList.add("is-visible");
-        chip.innerHTML = `<span>${session.id}</span><button type="button" data-logout>Log out</button>`;
+        // Staff recognise their own name faster than their ID. The ID follows in
+        // sr-only text rather than a title, which would override the chip's
+        // accessible name and announce the ID instead of the name.
+        const label = escapeHtml(session.name || session.id);
+        const srId = session.name
+          ? `<span class="sr-only"> · staff ID ${escapeHtml(session.id)}</span>`
+          : "";
+        chip.innerHTML = `<span>${label}${srId}</span><button type="button" data-logout>Log out</button>`;
         chip.querySelector("[data-logout]")?.addEventListener("click", () => {
           clearSessionEmployee();
-          if (/donate\.html/i.test(location.pathname)) {
-            location.href = "donate.html";
-          } else {
-            location.href = "login.html";
-          }
+          location.href = staffLoginHref();
         });
       } else {
         chip.hidden = true;
@@ -95,48 +111,20 @@
       }
     }
 
-    if (loginNav) {
-      loginNav.textContent = session ? session.id : "Employee";
-    }
-
-    if (banner) {
-      // Banner content is managed on donate via syncDonateModeUI (session only).
-      // On other pages, show active/session tracking chip context.
-      const onDonate = Boolean(document.querySelector("[data-donate-mode]"));
-      if (!onDonate && active) {
-        banner.hidden = false;
-        banner.classList.add("is-visible");
-        banner.innerHTML = `<span>Staff mode · <strong>${active.id}</strong>${
-          active.name ? ` · ${active.name}` : ""
-        }</span>`;
-      } else if (!onDonate) {
-        banner.hidden = true;
-        banner.classList.remove("is-visible");
-        banner.innerHTML = "";
-      } else if (active || session) {
-        banner.innerHTML = `<span>Staff mode · <strong>${
-          (session || active).id
-        }</strong>${
-          (session || active).name ? ` · ${(session || active).name}` : ""
-        }</span><button type="button" class="employee-banner__logout" data-logout-inline>Log out</button>`;
-        banner.querySelector("[data-logout-inline]")?.addEventListener("click", () => {
-          clearSessionEmployee();
-          location.href = "donate.html";
-        });
-      }
-    }
-
     applyEmployeeLinks(active?.id || session?.id || "");
 
+    // Silent attribution only — donate has no staff UI. Prefer the signed-in
+    // ID, else an ?employeeId= on a shared link.
     const hiddenEmp = document.querySelector("[data-employee-id]");
-    const modeValue = document.querySelector("[data-donate-mode-value]");
-    const isEmployeeMode = modeValue?.value === "employee";
-    if (hiddenEmp && isEmployeeMode) {
-      hiddenEmp.value = session?.id || "";
+    if (hiddenEmp) {
+      const params = new URLSearchParams(location.search);
+      const fromUrl = params.get("employeeId") || params.get("emp");
+      hiddenEmp.value =
+        session?.id || findEmployee(fromUrl)?.id || "";
     }
 
-    // A signed-in fundraiser gets their name in the field whichever donate mode
-    // the form is in, so long as nobody has typed over it.
+    // A signed-in fundraiser gets their name in the field, so long as nobody
+    // has typed over it. The field stays editable for shared links.
     const fundraiser = document.querySelector("[data-fundraiser]");
     if (fundraiser && session?.name) {
       if (!fundraiser.value || fundraiser.dataset.autofill === "1") {
@@ -144,117 +132,6 @@
         fundraiser.dataset.autofill = "1";
       }
     }
-
-    // Links into the staff screens stay hidden from donors.
-    document.querySelectorAll("[data-staff-only]").forEach((el) => {
-      el.hidden = !session;
-    });
-
-    syncDonateModeUI();
-  }
-
-  function getDonateMode() {
-    return (
-      document.querySelector("[data-donate-mode-value]")?.value ||
-      (getSessionEmployee() || getActiveEmployeeId() ? "employee" : "donor")
-    );
-  }
-
-  function setDonateMode(mode) {
-    const next = mode === "employee" ? "employee" : "donor";
-    const modeValue = document.querySelector("[data-donate-mode-value]");
-    if (modeValue) modeValue.value = next;
-
-    document.querySelectorAll("[data-donate-mode] [data-mode]").forEach((btn) => {
-      const active = btn.dataset.mode === next;
-      btn.classList.toggle("is-active", active);
-      btn.setAttribute("aria-selected", String(active));
-    });
-
-    document.querySelectorAll("[data-mode-panel]").forEach((panel) => {
-      const active = panel.dataset.modePanel === next;
-      panel.hidden = !active;
-      panel.classList.toggle("is-active", active);
-    });
-
-    document.querySelectorAll("[data-donor-only]").forEach((el) => {
-      el.hidden = next === "employee";
-    });
-    document.querySelectorAll("[data-employee-only]").forEach((el) => {
-      el.hidden = next !== "employee";
-    });
-
-    resetPaymentDoneButton();
-
-    syncDonateModeUI();
-    const heroTitle = document.querySelector(".donate-main .page-hero h1");
-    const heroLede = document.querySelector(".donate-main .page-hero p:not(.eyebrow)");
-    if (heroTitle && heroLede) {
-      if (next === "employee") {
-        heroTitle.textContent = "Collect gifts with care";
-        heroLede.textContent =
-          "Sign in with your staff ID, share your link, and track every gift.";
-      } else {
-        heroTitle.textContent = "Give a little. Help a lot.";
-        heroLede.textContent =
-          "Pick a cause, choose an amount, and pay with any UPI app.";
-      }
-    }
-  }
-
-  function syncDonateModeUI() {
-    const mode = getDonateMode();
-    const session = getSessionEmployee();
-    const form = document.querySelector("[data-donate-form], [data-upi-form]");
-    const gate = document.querySelector("[data-employee-gate]");
-    const share = document.querySelector("[data-employee-share]");
-    const shareUrl = document.querySelector("[data-employee-share-url]");
-    const hiddenEmp = document.querySelector("[data-employee-id]");
-    const banner = document.querySelector("[data-employee-banner]");
-    const params = new URLSearchParams(location.search);
-    const fromUrl = params.get("employeeId") || params.get("emp");
-    const attributed = findEmployee(fromUrl)?.id || "";
-
-    if (mode === "donor") {
-      // Shared staff links still attribute gifts without forcing employee UI
-      if (hiddenEmp) hiddenEmp.value = attributed;
-      if (gate) gate.hidden = true;
-      if (share) share.hidden = true;
-      if (banner) {
-        banner.hidden = true;
-        banner.classList.remove("is-visible");
-      }
-      form?.classList.remove("is-locked");
-      document.querySelector("[data-pay-sticky]")?.classList.remove("is-locked");
-      return;
-    }
-
-    // Employee mode — staff session required to unlock pay + share link
-    if (gate) gate.hidden = Boolean(session);
-    if (banner) {
-      if (session) {
-        banner.hidden = false;
-        banner.classList.add("is-visible");
-      } else {
-        banner.hidden = true;
-        banner.classList.remove("is-visible");
-      }
-    }
-    if (share) {
-      share.hidden = !session;
-      if (session && shareUrl) {
-        const url = new URL("donate.html", location.href);
-        url.searchParams.set("employeeId", session.id);
-        if (session.name) url.searchParams.set("fundraiser", session.name);
-        url.searchParams.delete("mode");
-        shareUrl.value = url.href;
-      }
-    }
-    if (hiddenEmp) hiddenEmp.value = session?.id || "";
-    const locked = !session;
-    form?.classList.toggle("is-locked", locked);
-    const sticky = document.querySelector("[data-pay-sticky]");
-    sticky?.classList.toggle("is-locked", locked);
   }
 
   function fieldValue(selector) {
@@ -512,7 +389,7 @@
     });
   }
 
-  // Employee login
+  // Private staff login — lives under WFD_STAFF_LOGIN, never linked from the nav.
   const loginForm = document.querySelector("[data-employee-login]");
   if (loginForm) {
     loginForm.addEventListener("submit", (e) => {
@@ -528,67 +405,8 @@
         return;
       }
       setSessionEmployee(emp);
-      location.href = `donate.html?employeeId=${encodeURIComponent(
-        emp.id
-      )}&mode=employee`;
+      location.href = fundraiserHrefFor(emp);
     });
-  }
-
-  // Donate page: donor vs employee
-  if (document.querySelector("[data-donate-mode]")) {
-    document.querySelectorAll("[data-donate-mode] [data-mode]").forEach((btn) => {
-      btn.addEventListener("click", () => setDonateMode(btn.dataset.mode));
-    });
-
-    const inlineLogin = document.querySelector("[data-employee-login-inline]");
-    if (inlineLogin) {
-      inlineLogin.addEventListener("submit", (e) => {
-        e.preventDefault();
-        const idInput = inlineLogin.querySelector("[data-login-id-inline]");
-        const note = inlineLogin.querySelector("[data-login-note-inline]");
-        const emp = findEmployee(idInput?.value);
-        if (!emp) {
-          if (note) {
-            note.innerHTML =
-              'Unknown ID. Try E001, E002, or E003 · or use <a href="login.html">Employee login</a>';
-            note.style.color = "var(--wfd-primary)";
-          }
-          return;
-        }
-        setSessionEmployee(emp);
-        const url = new URL(location.href);
-        url.searchParams.set("employeeId", emp.id);
-        url.searchParams.set("mode", "employee");
-        history.replaceState({}, "", url);
-        setDonateMode("employee");
-        renderEmployeeChrome();
-      });
-    }
-
-    const shareCopy = document.querySelector("[data-employee-share-copy]");
-    if (shareCopy) {
-      shareCopy.addEventListener("click", async () => {
-        const input = document.querySelector("[data-employee-share-url]");
-        if (!input?.value) return;
-        try {
-          await navigator.clipboard.writeText(input.value);
-          shareCopy.textContent = "Copied";
-          setTimeout(() => (shareCopy.textContent = "Copy"), 1500);
-        } catch {
-          input.select();
-          shareCopy.textContent = "Select & copy";
-        }
-      });
-    }
-
-    const params = new URLSearchParams(location.search);
-    const urlMode = params.get("mode");
-    // Employee UI only when staff is logged in (or explicitly asked for staff mode).
-    // Shared ?employeeId= links stay in donor mode and still attribute the gift.
-    const startEmployee =
-      urlMode === "employee" || Boolean(getSessionEmployee());
-    setDonateMode(startEmployee ? "employee" : "donor");
-    renderEmployeeChrome();
   }
 
   // Admin CSV export (anytime)
@@ -1733,20 +1551,6 @@
     return bits.join(" · ");
   }
 
-  function requireStaffSession() {
-    if (getDonateMode() !== "employee" || getSessionEmployee()) return true;
-    const noteEl = document.querySelector("[data-form-note]");
-    if (noteEl) {
-      noteEl.textContent = "Log in with your employee ID before recording a gift.";
-      noteEl.style.color = "var(--wfd-primary)";
-    }
-    document.querySelector("[data-login-id-inline]")?.focus();
-    document
-      .querySelector("[data-employee-gate]")
-      ?.scrollIntoView({ behavior: "smooth", block: "center" });
-    return false;
-  }
-
   /**
    * Donate Now — mirrors the live Give form: required donor, cause, payment
    * type, Payment Id and fundraiser, then stores the donation record.
@@ -1756,12 +1560,10 @@
     if (!upiForm) return;
     const noteEl = upiForm.querySelector("[data-form-note]");
     const submitBtn = upiForm.querySelector("[data-donate-submit]");
-    const mode = getDonateMode();
     const employeeId =
       document.querySelector("[data-employee-id]")?.value || "";
 
     if (submitBtn?.disabled) return;
-    if (!requireStaffSession()) return;
 
     clearFieldErrors();
 

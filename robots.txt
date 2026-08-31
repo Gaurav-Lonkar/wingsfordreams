@@ -1,6 +1,4 @@
 User-agent: *
 Allow: /
-Disallow: /admin.html
-Disallow: /login.html
 
 Sitemap: https://gaurav-lonkar.github.io/wingsfordreams/sitemap.xml

@@ -246,6 +246,13 @@
   display: inline-flex;
 }
 
+/* Full names are longer than IDs, so cap the chip instead of widening the nav. */
+.employee-chip > span {
+  max-width: 14ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .employee-chip button {
   border: 0;
   background: transparent;

@@ -34,21 +34,23 @@ Import at [penpot.app](https://penpot.app/) → project menu → **Import**, the
 | `environment.html` | Environment |
 | `dog-feeding.html` | Dog Feeding |
 | `csr.html` | CSR |
-| `donate.html` | Donate (UPI QR) |
+| `donate.html` | Donate (UPI QR) — donor-only |
+| `donations/<name>/` | Per-fundraiser donate page |
 | `school-kit.html` | School Kit |
 | `contact.html` | Contact |
 | `banks.html` | Bank Details |
-| `login.html` | Employee login |
-| `admin.html` | Admin donation CSV export |
+| `staff-0ef85eac/` | Private staff login (not linked from the site) |
+| `staff-0ef85eac/admin.html` | Admin donation CSV export |
 | `career.html` | Career |
 
-## Employee login (demo)
+## Staff login (demo)
 
-1. Open **Employee** → `login.html` and sign in with `E001`, `E002`, or `E003`.
-2. Donate links include `?employeeId=E00X`.
-3. On Donate, fill the same fields as the live form (name, email, phone, PAN, pin, cause, amount, fundraiser). Fundraiser prefills with the logged-in employee name.
-4. Click **Mark payment done (demo)** — the record is saved (no instant download).
-5. Admins open **`admin.html`** anytime and click **Download CSV**:
+Staff pages are unlinked and live under an unguessable path. Bookmark the URL; do not publish it.
+
+1. Open `staff-0ef85eac/` and sign in with `E001`, `E002`, or `E003`.
+2. After login you land on your fundraiser page (`donations/<name>/`). The header chip shows your name.
+3. The public donate form has no staff UI. Records still attribute a signed-in ID (or `?employeeId=`) silently.
+4. Admins open **`staff-0ef85eac/admin.html`** and click **Download CSV**:
 
 ```csv
 transactionId,gatewayTxnId,utr,paymentStatus,donorName,email,phone,pan,pinCode,cause,amount,fundraiser,employeeId,timeIST
