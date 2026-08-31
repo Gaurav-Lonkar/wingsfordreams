@@ -28,7 +28,6 @@ HEAD = """<!DOCTYPE html>
   <div class="scroll-progress" aria-hidden="true"></div>
   <div class="festive-bar" data-festive-bar hidden>
     <span data-festive-label>Happy festival</span>
-    <button type="button" class="festive-bar__demo" data-festive-demo title="Demo emoji bomb">🎉 Demo</button>
   </div>
   <a class="float-donate" href="{donate_href}" data-employee-link><span class="float-donate__pulse" aria-hidden="true"></span> Donate</a>
 """
@@ -68,7 +67,6 @@ def header(active: str, donate_href: str = "donate.html") -> str:
             <li class="nav__item"><a class="nav__link{act('login')}" href="login.html" data-login-nav>Employee</a></li>
           </ul>
           <div class="nav__actions">
-            <button type="button" class="festive-demo-btn" data-festive-demo title="Demo festival emoji bomb">🎉</button>
             <div class="employee-chip" data-employee-chip hidden></div>
             <a class="btn btn--primary btn--sm header-cta--desktop" href="{donate_href}" data-employee-link>Donate Now</a>
           </div>
@@ -524,7 +522,7 @@ pages["women-empowerment.html"] = page(
     </section>
   </main>
 """,
-    donate_cause="Women Empowerment And Hygiene",
+    donate_cause="Women Empowerment",
 )
 
 pages["child-education.html"] = page(
@@ -621,7 +619,7 @@ pages["environment.html"] = page(
           <h2>Cloth bag distribution</h2>
           <p>We work to reduce plastic bags and increase cloth alternatives while supporting forest-based livelihoods and ecosystem services—carbon sequestration, water, biodiversity, fuel, and fodder.</p>
           <div class="stack-sm cta-actions">
-            <a class="btn btn--primary" href="donate.html?cause=Emergency%20%26%20Volunteer%20Camp%20Support" data-employee-link>Support cloth bag drives</a>
+            <a class="btn btn--primary" href="donate.html?cause=Environment" data-employee-link>Support cloth bag drives</a>
           </div>
         </div>
         <div class="split__media split__media--green reveal">
@@ -638,7 +636,7 @@ pages["environment.html"] = page(
     </section>
   </main>
 """,
-    donate_cause="Emergency & Volunteer Camp Support",
+    donate_cause="Environment",
 )
 
 pages["dog-feeding.html"] = page(
@@ -734,170 +732,150 @@ pages["csr.html"] = page(
 """,
 )
 
-pages["donate.html"] = page(
-    "Donate",
-    "Donate to Wings For Dreams in under a minute — pick a cause, choose an amount, pay with UPI.",
-    "donate",
-    """
+DONATE_DESCRIPTION = (
+    "Donate to Wings For Dreams \u2014 enter the donation details and scan the "
+    "auto-generated UPI QR code to pay."
+)
+
+DONATE_BODY = """
   <main class="donate-main">
     <section class="page-hero page-hero--compact page-hero--donate">
       <div class="container">
         <p class="eyebrow">Donate</p>
         <h1>Give a little. Help a lot.</h1>
-        <p>Pick a cause, choose an amount, and pay with any UPI app.</p>
+        <p>Fill in the donation details and scan the QR code to pay.</p>
       </div>
     </section>
     <section class="section section--donate">
       <div class="container panel-narrow">
-        <div class="donate-mode" data-donate-mode role="tablist" aria-label="Donate as">
-          <button type="button" class="donate-mode__btn is-active" role="tab" aria-selected="true" data-mode="donor">
-            I’m giving
-          </button>
-          <button type="button" class="donate-mode__btn" role="tab" aria-selected="false" data-mode="employee">
-            I’m staff
-          </button>
-        </div>
+        <div class="employee-banner is-visible" data-employee-banner hidden></div>
 
-        <div class="donate-mode-panel is-active" data-mode-panel="donor" hidden></div>
-        <div class="donate-mode-panel" data-mode-panel="employee" hidden>
-          <div class="employee-gate" data-employee-gate>
-            <p class="donate-mode-note">Enter your staff ID so gifts are tagged to you.</p>
-            <form class="employee-gate__form" data-employee-login-inline>
-              <label class="form-field">Employee ID
-                <input type="text" placeholder="e.g. E001" data-login-id-inline autocomplete="username" required />
-              </label>
-              <button class="btn btn--primary" type="submit">Continue</button>
-              <p class="note" data-login-note-inline>Try E001, E002, or E003</p>
-            </form>
-          </div>
-          <div class="employee-banner is-visible" data-employee-banner hidden></div>
-          <div class="employee-share" data-employee-share hidden>
-            <p class="form-label-title">Your share link</p>
-            <div class="employee-share__row">
-              <input type="text" readonly data-employee-share-url />
-              <button type="button" class="btn btn--ghost btn--sm" data-employee-share-copy>Copy</button>
-            </div>
-            <p class="note">Anyone who pays through this link is tagged to you.</p>
-          </div>
-        </div>
-
-        <form class="donate-panel form donate-panel--fast" data-upi-form data-donate-form>
+        <form class="donate-panel form give-form" data-upi-form data-donate-form novalidate>
           <input type="hidden" name="employeeId" data-employee-id value="" />
           <input type="hidden" name="donateMode" data-donate-mode-value value="donor" />
 
           <div class="gateway-banner" data-gateway-banner hidden></div>
 
-          <div class="form-block">
-            <p class="form-label-title">1. Who are we helping?</p>
-            <div class="cause-picker cause-picker--simple">
-              <label class="cause-option is-selected" data-label="Women Empowerment And Hygiene">
-                <input type="radio" name="cause" checked />
-                <span class="cause-option__text">Women &amp; hygiene</span>
-              </label>
-              <label class="cause-option" data-label="Child Education">
-                <input type="radio" name="cause" />
-                <span class="cause-option__text">Child education</span>
-              </label>
-              <label class="cause-option" data-label="Animal Care">
-                <input type="radio" name="cause" />
-                <span class="cause-option__text">Animal care</span>
-              </label>
-              <label class="cause-option" data-label="Emergency &amp; Volunteer Camp Support">
-                <input type="radio" name="cause" />
-                <span class="cause-option__text">Emergency support</span>
-              </label>
-            </div>
-          </div>
-
-          <div class="form-block amount-block">
-            <p class="form-label-title">2. How much would you like to give?</p>
+          <section class="give-section">
+            <h2 class="give-section__title">How much would you like to donate today?</h2>
+            <p class="give-section__desc">All donations directly impact our organization and help us further our mission.</p>
             <div class="amount-field" data-amount-field>
               <span class="amount-field__currency" aria-hidden="true">₹</span>
               <input
                 type="text"
                 inputmode="numeric"
                 autocomplete="off"
-                placeholder="500"
+                placeholder="1"
                 aria-label="Donation amount in rupees"
+                name="give-amount"
                 data-custom-amount
-                value="500"
+                value="1"
               />
             </div>
-            <p class="amount-impact" data-amount-impact>₹500 helps with hygiene kits on the ground.</p>
+            <p class="give-custom-amount-text">Custom Amount</p>
             <div class="amount-grid amount-grid--simple" data-amount-group>
-              <button type="button" class="amount-option is-selected" data-amount="500" data-impact="Helps with hygiene kits on the ground.">₹500</button>
-              <button type="button" class="amount-option" data-amount="1000" data-impact="Feeds street dogs or supports a day of outreach.">₹1,000</button>
-              <button type="button" class="amount-option" data-amount="2000" data-impact="About one full school kit for a child.">₹2,000</button>
-              <button type="button" class="amount-option" data-amount="5000" data-impact="A bigger boost for training and field work.">₹5,000</button>
+              <button type="button" class="amount-option" data-amount="100">₹100</button>
+              <button type="button" class="amount-option" data-amount="500">₹500</button>
+              <button type="button" class="amount-option" data-amount="1000">₹1,000</button>
+              <button type="button" class="amount-option" data-amount="2000">₹2,000</button>
+              <button type="button" class="amount-option" data-amount="5000">₹5,000</button>
             </div>
-          </div>
+            <p class="give-amount-min">Pick a suggested amount or type your own. Minimum ₹1.</p>
+          </section>
 
-          <div class="upi-result is-visible" data-upi-result>
-            <p class="form-label-title upi-result__step">3. Pay with UPI</p>
-            <p class="upi-result__amount" data-upi-amount-label>₹500</p>
-            <p class="upi-result__meta" data-upi-cause-label>Women Empowerment And Hygiene</p>
-            <div class="upi-result__qr" data-upi-qr aria-label="UPI payment QR code"></div>
-            <p class="upi-result__vpa" data-upi-vpa></p>
-            <div class="upi-result__actions">
-              <a class="btn btn--primary btn--pay" data-upi-launch href="#">Pay with UPI</a>
-              <button type="button" class="btn btn--ghost btn--sm" data-upi-copy>Copy link</button>
+          <section class="give-section">
+            <h2 class="give-section__title">Who’s giving today?</h2>
+            <p class="give-section__desc">We’ll never share this information with anyone.</p>
+            <div class="form-row">
+              <label class="form-field">
+                <span class="form-field__label">First Name <span class="req" aria-hidden="true">*</span><span class="sr-only">required</span></span>
+                <input type="text" name="give_first" autocomplete="given-name" placeholder="First Name" data-donor-first maxlength="150" required />
+              </label>
+              <label class="form-field">
+                <span class="form-field__label">Last Name</span>
+                <input type="text" name="give_last" autocomplete="family-name" placeholder="Last Name" data-donor-last maxlength="150" />
+              </label>
             </div>
-            <button type="button" class="btn btn--ghost btn--sm upi-result__done" data-payment-done>I’ve paid (demo)</button>
-            <p class="upi-hint">On phone, tap Pay. On desktop, scan the QR.</p>
-            <p class="note" data-form-note></p>
-          </div>
+            <label class="form-field">
+              <span class="form-field__label">Email Address <span class="req" aria-hidden="true">*</span><span class="sr-only">required</span></span>
+              <input type="email" name="give_email" autocomplete="email" placeholder="Email Address" data-donor-email maxlength="150" required />
+            </label>
+            <label class="form-field">
+              <span class="form-field__label">Phone</span>
+              <input type="tel" name="phone" placeholder="Phone" data-donor-phone inputmode="numeric" maxlength="10" />
+            </label>
+            <label class="form-field">
+              <span class="form-field__label">Cause <span class="req" aria-hidden="true">*</span><span class="sr-only">required</span></span>
+              <select name="cause" data-cause-select required>
+                <option value="" disabled selected>- select -</option>
+                <option value="Women Empowerment">Women Empowerment</option>
+                <option value="Child Education">Child Education</option>
+                <option value="Animal Care">Animal Care</option>
+                <option value="Environment">Environment</option>
+              </select>
+            </label>
+            <label class="form-field">
+              <span class="form-field__label">PAN No.</span>
+              <input type="text" name="pan_no" placeholder="PAN No." data-donor-pan maxlength="10" />
+            </label>
+            <label class="form-field">
+              <span class="form-field__label">Aadhar</span>
+              <input type="text" name="aadhar" placeholder="Aadhar" data-donor-aadhar inputmode="numeric" maxlength="12" />
+            </label>
+            <label class="form-field">
+              <span class="form-field__label">City</span>
+              <input type="text" name="city" placeholder="City" data-donor-city maxlength="120" />
+            </label>
+            <label class="form-field">
+              <span class="form-field__label">Payment Type <span class="req" aria-hidden="true">*</span><span class="sr-only">required</span></span>
+              <select name="payment_type" data-payment-type required>
+                <option value="" disabled selected>- select -</option>
+                <option value="UPI">UPI</option>
+                <option value="Swipe">Swipe</option>
+                <option value="Cash">Cash</option>
+                <option value="NEFT/RTGS">NEFT/RTGS</option>
+                <option value="Cheque">Cheque</option>
+              </select>
+            </label>
+            <label class="form-field">
+              <span class="form-field__label"><span data-payment-id-label>Payment Id</span> <span class="req" aria-hidden="true">*</span><span class="sr-only">required</span></span>
+              <input type="text" name="payment_id" placeholder="Payment Id" data-payment-id maxlength="60" required />
+            </label>
+            <label class="form-field">
+              <span class="form-field__label">Fundraiser <span class="req" aria-hidden="true">*</span><span class="sr-only">required</span></span>
+              <input type="text" name="fundraiser" placeholder="Fundraiser" data-fundraiser maxlength="150" required />
+            </label>
+          </section>
 
-          <p class="pay-trust-line" data-pay-trust data-donor-only>
-            Safe &amp; official · 80G tax benefit · Registered NGO · PAN AAATW5579L
-          </p>
-
-          <details class="receipt-details" data-donor-only>
-            <summary>
-              <span class="receipt-details__row">
-                <span class="receipt-details__copy">
-                  <strong>Need a tax receipt?</strong>
-                  <span>Optional — name, email, PAN</span>
-                </span>
-                <span class="receipt-details__toggle" aria-hidden="true">
-                  <span class="receipt-details__hint receipt-details__hint--closed">Add details</span>
-                  <span class="receipt-details__hint receipt-details__hint--open">Hide</span>
-                  <span class="receipt-details__chevron"></span>
-                </span>
-              </span>
-            </summary>
-            <div class="receipt-details__body">
-              <label class="form-field">Your name
-                <input type="text" name="billing_name" placeholder="Anonymous if blank" data-donor-name maxlength="300" />
-              </label>
-              <label class="form-field">Email
-                <input type="email" name="billing_email" placeholder="For your receipt" data-donor-email maxlength="100" />
-              </label>
-              <label class="form-field">Mobile
-                <input type="tel" name="billing_phone" placeholder="10-digit mobile" data-donor-phone inputmode="numeric" maxlength="10" pattern="[0-9]{10}" />
-              </label>
-              <div class="form-row">
-                <label class="form-field">PAN
-                  <input type="text" name="billing_pan" placeholder="PAN" data-donor-pan maxlength="10" />
-                </label>
-                <label class="form-field">Pin code
-                  <input type="text" name="billing_pin" placeholder="Pin code" data-donor-pin inputmode="numeric" maxlength="6" pattern="[0-9]{6}" />
-                </label>
+          <section class="give-section">
+            <h2 class="give-section__title">How would you like to pay today?</h2>
+            <p class="give-section__desc">This donation is a secure and encrypted payment.</p>
+            <div class="upi-result is-visible" data-upi-result>
+              <p class="form-label-title upi-result__step" data-upi-title>Scan this QR code to pay</p>
+              <p class="upi-result__amount" data-upi-amount-label>₹1</p>
+              <p class="upi-result__meta" data-upi-cause-label>Donation</p>
+              <div class="upi-result__qrwrap">
+                <div class="upi-result__qr" data-upi-qr aria-label="UPI payment QR code"></div>
+                <span class="upi-result__lockbadge" aria-hidden="true">Locked</span>
               </div>
-              <input type="hidden" name="gateway_txn" data-gateway-txn value="" />
-              <input type="hidden" name="gateway_utr" data-gateway-utr value="" />
-              <input type="hidden" name="gateway_status" data-gateway-status value="" />
+              <p class="upi-result__lock" data-upi-lock role="status" hidden></p>
+              <p class="upi-result__vpa" data-upi-vpa></p>
+              <div class="upi-result__actions">
+                <a class="btn btn--primary btn--pay" data-upi-launch href="#">Pay with UPI</a>
+                <button type="button" class="btn btn--ghost btn--sm" data-upi-copy>Copy link</button>
+              </div>
+              <p class="upi-hint">The QR code updates automatically with the amount and cause above. On phone, tap Pay. On desktop, scan the QR, then enter the Payment Id.</p>
             </div>
-          </details>
+          </section>
 
-          <div class="employee-receipt" data-employee-only hidden>
-            <p class="form-label-title">Optional notes</p>
-            <label class="form-field">Donor name
-              <input type="text" name="emp_donor_name" placeholder="Anonymous if blank" data-emp-donor-name maxlength="300" />
-            </label>
-            <label class="form-field">Collected by
-              <input type="text" name="billing_fundraiser" placeholder="Your name" data-fundraiser maxlength="300" />
-            </label>
-          </div>
+          <section class="give-section give-section--total">
+            <p class="give-total">
+              <span class="give-total__label">Donation Total:</span>
+              <strong class="give-total__value" data-donate-total>₹1</strong>
+            </p>
+            <button type="submit" class="btn btn--primary btn--pay give-submit" data-donate-submit>Donate Now</button>
+            <p class="note" data-form-note></p>
+          </section>
 
           <div class="payment-success" data-payment-success hidden>
             <p class="payment-success__title">Thank you for your kindness</p>
@@ -917,13 +895,48 @@ pages["donate.html"] = page(
 
   <div class="pay-sticky" data-pay-sticky hidden>
     <div class="pay-sticky__meta">
-      <strong data-sticky-amount>₹500</strong>
-      <span data-sticky-cause>Women Empowerment And Hygiene</span>
+      <strong data-sticky-amount>₹1</strong>
+      <span data-sticky-cause>Donation</span>
     </div>
     <a class="btn btn--primary" data-sticky-pay href="#">Pay with UPI</a>
   </div>
-""",
-)
+"""
+
+
+def slugify(name: str) -> str:
+    return "-".join(name.lower().split())
+
+
+def donate_body(fundraiser: str = "") -> str:
+    """Donate body, optionally bound to one fundraiser like the live /donations/amir/ page."""
+    if not fundraiser:
+        return DONATE_BODY
+    return DONATE_BODY.replace(
+        'placeholder="Fundraiser" data-fundraiser',
+        f'placeholder="Fundraiser" value="{fundraiser}" data-fundraiser',
+    ).replace(
+        '<p class="eyebrow">Donate</p>',
+        f'<p class="eyebrow">Donate \u00b7 {fundraiser}</p>',
+    )
+
+
+pages["donate.html"] = page("Donate", DONATE_DESCRIPTION, "donate", donate_body())
+
+# One donation page per fundraiser, mirroring the live /donations/<name>/ links.
+FUNDRAISERS = ["Amir", "Priya Sharma", "Arjun Mehta", "Neha Patil"]
+
+for person in FUNDRAISERS:
+    nested = page(
+        person,
+        f"Donate to Wings For Dreams through {person} \u2014 scan the UPI QR code to pay.",
+        "donate",
+        donate_body(person),
+    ).replace(
+        '<meta name="viewport" content="width=device-width, initial-scale=1" />',
+        '<meta name="viewport" content="width=device-width, initial-scale=1" />\n'
+        '  <base href="../../" />',
+    )
+    pages[f"donations/{slugify(person)}/index.html"] = nested
 
 pages["school-kit.html"] = page(
     "Donate School Kit",
@@ -1129,15 +1142,19 @@ pages["admin.html"] = page(
                 <th>Email</th>
                 <th>Phone</th>
                 <th>PAN</th>
+                <th>Aadhar</th>
+                <th>City</th>
                 <th>Pin</th>
                 <th>Cause</th>
                 <th>Amount</th>
+                <th>Payment Type</th>
+                <th>Payment Id</th>
                 <th>Fundraiser</th>
                 <th>Employee ID</th>
               </tr>
             </thead>
             <tbody data-admin-rows>
-              <tr><td colspan="13">No records yet. Mark a payment done on Donate first.</td></tr>
+              <tr><td colspan="17">No records yet. Record a donation on Donate first.</td></tr>
             </tbody>
           </table>
         </div>
@@ -1187,7 +1204,9 @@ pages["career.html"] = page(
 )
 
 for name, html in pages.items():
-    (ROOT / name).write_text(html, encoding="utf-8")
+    target = ROOT / name
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(html, encoding="utf-8")
     print("wrote", name)
 
 print("done", len(pages), "pages")

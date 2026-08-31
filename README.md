@@ -80,4 +80,9 @@ gateway: {
 
 ## UPI donations
 
-Edit [`js/upi-config.js`](js/upi-config.js) and set the NGO’s **real** UPI ID before go-live.
+Edit [`js/upi-config.js`](js/upi-config.js) and set the NGO’s **real** UPI IDs before go-live.
+
+`upiIds` holds every collection VPA. On each page load one is chosen round-robin
+(the index is kept in `localStorage.wfd_upi_index`), so refreshing the donate page
+moves the QR code and “Pay to …” label to the next account. Read `upiId` for the
+VPA active on the current load.

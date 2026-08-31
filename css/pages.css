@@ -642,8 +642,116 @@
 }
 
 .amount-grid--simple {
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(5rem, 1fr));
   margin-top: 0.65rem;
+}
+
+/* Give-form replica: one visible field per row, live headings and labels */
+.give-form {
+  gap: 1.75rem;
+}
+
+.give-section {
+  display: grid;
+  gap: 0.85rem;
+  padding: 1.35rem 1.4rem;
+  border: 1.5px solid var(--wfd-border);
+  border-radius: 20px;
+  background: var(--wfd-white);
+}
+
+.give-section__title {
+  margin: 0;
+  font-size: 1.12rem;
+  line-height: 1.35;
+  color: var(--wfd-ink);
+}
+
+.give-section__desc {
+  margin: -0.35rem 0 0.25rem;
+  font-size: 0.9rem;
+  color: var(--wfd-ink-soft);
+}
+
+.give-custom-amount-text {
+  margin: -0.35rem 0 0;
+  font-size: 0.86rem;
+  font-weight: 600;
+  color: var(--wfd-ink-soft);
+}
+
+.give-amount-min {
+  margin: 0;
+  font-size: 0.82rem;
+  color: #888;
+}
+
+.form-field {
+  display: grid;
+  gap: 0.45rem;
+  font-size: 0.86rem;
+  font-weight: 600;
+  color: var(--wfd-ink);
+}
+
+.form-field__label {
+  display: block;
+}
+
+.req {
+  color: var(--wfd-primary);
+  margin-left: 0.1rem;
+}
+
+.form-field.has-error input,
+.form-field.has-error select {
+  border-color: var(--wfd-primary);
+  background: #fffafb;
+  box-shadow: 0 0 0 3px rgba(174, 13, 54, 0.1);
+}
+
+.give-section--total {
+  gap: 1rem;
+  text-align: center;
+  background: var(--wfd-surface-2);
+}
+
+.give-total {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 0.5rem;
+  margin: 0;
+}
+
+.give-total__label {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--wfd-ink-soft);
+}
+
+.give-total__value {
+  font-size: 1.5rem;
+  letter-spacing: -0.02em;
+  color: var(--wfd-primary);
+}
+
+.give-submit {
+  width: 100%;
+}
+
+.give-submit.is-loading {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55rem;
+  cursor: wait;
+}
+
+@media (max-width: 560px) {
+  .give-section {
+    padding: 1.15rem 1.05rem;
+  }
 }
 
 .pay-trust-line {
@@ -756,10 +864,15 @@
   }
 }
 
+.upi-result__qrwrap {
+  position: relative;
+  width: 200px;
+  margin: 0.85rem auto 1rem;
+}
+
 .upi-result__qr {
   width: 200px;
   height: 200px;
-  margin: 0.85rem auto 1rem;
   padding: 0.65rem;
   background: var(--wfd-white);
   border-radius: 14px;
@@ -787,6 +900,61 @@
   font-size: 0.9rem;
   color: var(--wfd-muted-text);
   margin: 0;
+}
+
+.upi-result__lockbadge {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  display: none;
+  padding: 0.4rem 0;
+  background: rgba(255, 255, 255, 0.92);
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--wfd-muted-text);
+}
+
+/* Locked: the code on screen is a decoy, so blur it and kill the pay actions */
+.upi-result.is-scrambled .upi-result__qr {
+  filter: blur(4px) grayscale(1);
+  opacity: 0.55;
+}
+
+.upi-result.is-scrambled .upi-result__lockbadge {
+  display: block;
+}
+
+.upi-result.is-scrambled .upi-result__amount {
+  color: var(--wfd-muted-text);
+}
+
+.upi-result__lock {
+  font-size: 0.84rem;
+  font-weight: 600;
+  color: var(--wfd-primary);
+  margin: 0 0 0.9rem;
+}
+
+.upi-result__lock.is-info {
+  color: var(--wfd-muted-text);
+}
+
+/* Non-UPI payment types are settled offline, so drop the QR entirely */
+.upi-result.is-not-upi .upi-result__qrwrap,
+.upi-result.is-not-upi .upi-result__vpa,
+.upi-result.is-not-upi .upi-result__actions,
+.upi-result.is-not-upi .upi-hint {
+  display: none;
+}
+
+.upi-result .btn.is-disabled,
+.upi-result .btn[aria-disabled="true"] {
+  opacity: 0.5;
+  pointer-events: none;
 }
 
 .upi-result__vpa {
@@ -1009,8 +1177,12 @@ body:has(.donate-main) .float-donate {
 }
 
 @media (max-width: 480px) {
+  .upi-result__qrwrap,
   .upi-result__qr {
     width: 184px;
+  }
+
+  .upi-result__qr {
     height: 184px;
   }
 }

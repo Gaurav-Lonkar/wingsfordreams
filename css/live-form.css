@@ -1,0 +1,564 @@
+/**
+ * Clone of the live GiveWP "classic" donation form (Astra theme) as served at
+ * donations.wingsfordreams.space/donations/<fundraiser>/.
+ *
+ * Values below mirror the live page: --give-primary-color #1E8CBE, Montserrat,
+ * boxed container on a light slate background. Kept in its own stylesheet so
+ * the Wings For Dreams tokens never bleed into the clone.
+ */
+:root {
+  --give-primary: #1e8cbe;
+  --give-primary-dark: #166f97;
+  --give-ink: #333;
+  --give-ink-soft: #6b7280;
+  --give-bg: #f0f5fa;
+  --give-card: #fff;
+  --give-line: #d1d5db;
+  --give-required: #d94f4f;
+  /* Shared main.js paints validation notes with this token */
+  --wfd-primary: #d94f4f;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body.give-clone {
+  margin: 0;
+  background: var(--give-bg);
+  color: var(--give-ink);
+  font-family: Montserrat, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    "Helvetica Neue", sans-serif;
+  font-size: 16px;
+  line-height: 1.6;
+}
+
+.give-clone-header {
+  background: var(--give-card);
+  border-bottom: 1px solid #e5e7eb;
+  padding: 1.15rem 1.25rem;
+  text-align: center;
+}
+
+.give-clone-header img {
+  height: 54px;
+  width: auto;
+}
+
+.give-clone-header__name {
+  margin: 0.35rem 0 0;
+  font-size: 0.9rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--give-ink-soft);
+}
+
+.give-clone-wrap {
+  max-width: 1140px;
+  margin: 0 auto;
+  padding: 2.25rem 1.25rem 4rem;
+}
+
+.give-clone-title {
+  margin: 0 0 1.5rem;
+  font-size: 1.6rem;
+  font-weight: 700;
+  text-align: center;
+}
+
+/* Form left, QR right */
+.give-clone-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 20.5rem);
+  gap: 1.5rem;
+  align-items: start;
+}
+
+/* Grid and flex children default to min-width:auto, which lets the intrinsic
+   width of inputs push the page wider than a narrow phone viewport. */
+.give-clone-grid > *,
+.give-form-section fieldset {
+  min-width: 0;
+}
+
+.give-card {
+  background: var(--give-card);
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  padding: 1.75rem;
+}
+
+.give-form-section + .give-form-section {
+  margin-top: 1.75rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #eceff3;
+}
+
+.give-amount-heading,
+.give-form-section legend {
+  display: block;
+  margin: 0 0 0.35rem;
+  padding: 0;
+  font-size: 1.18rem;
+  font-weight: 700;
+  color: var(--give-ink);
+}
+
+.give-amount-description,
+.give-section-description {
+  margin: 0 0 1.15rem;
+  font-size: 0.92rem;
+  color: var(--give-ink-soft);
+}
+
+.give-form-section fieldset {
+  border: 0;
+  margin: 0;
+  padding: 0;
+}
+
+/* Amount */
+.give-total-wrap {
+  display: flex;
+  align-items: stretch;
+  border: 1px solid var(--give-line);
+  border-radius: 4px;
+  overflow: hidden;
+  background: var(--give-card);
+  max-width: min(18rem, 100%);
+}
+
+.give-total-wrap:focus-within {
+  border-color: var(--give-primary);
+  box-shadow: 0 0 0 3px rgba(30, 140, 190, 0.15);
+}
+
+.give-currency-symbol {
+  display: grid;
+  place-items: center;
+  padding: 0 0.9rem;
+  background: #f3f6f9;
+  border-right: 1px solid var(--give-line);
+  font-weight: 700;
+  color: var(--give-ink);
+}
+
+.give-total-wrap input {
+  flex: 1;
+  width: 100%;
+  min-width: 0;
+  border: 0;
+  padding: 0.85rem 0.9rem;
+  font: inherit;
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: var(--give-ink);
+}
+
+.give-total-wrap input:focus {
+  outline: none;
+}
+
+.give-custom-amount-text {
+  margin: 0.5rem 0 0;
+  font-size: 0.86rem;
+  font-weight: 600;
+  color: var(--give-ink-soft);
+}
+
+.give-amount-suggestions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.9rem;
+}
+
+.give-amount-suggestions .amount-option {
+  appearance: none;
+  border: 1px solid var(--give-line);
+  background: var(--give-card);
+  border-radius: 4px;
+  padding: 0.55rem 0.95rem;
+  font: inherit;
+  font-weight: 600;
+  color: var(--give-ink);
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
+}
+
+.give-amount-suggestions .amount-option:hover {
+  border-color: var(--give-primary);
+  color: var(--give-primary);
+}
+
+.give-amount-suggestions .amount-option.is-selected {
+  border-color: var(--give-primary);
+  background: var(--give-primary);
+  color: #fff;
+}
+
+.give-amount-min {
+  margin: 0.65rem 0 0;
+  font-size: 0.82rem;
+  color: var(--give-ink-soft);
+}
+
+/* Fields */
+.give-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.form-field {
+  display: block;
+  margin-bottom: 1rem;
+}
+
+.give-label {
+  display: block;
+  margin-bottom: 0.35rem;
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--give-ink);
+}
+
+.give-required-indicator {
+  color: var(--give-required);
+  margin-left: 0.15rem;
+}
+
+/* Give's inline "?" help bubbles */
+.give-tooltip {
+  display: inline-grid;
+  place-items: center;
+  width: 1.05rem;
+  height: 1.05rem;
+  margin-left: 0.3rem;
+  border-radius: 50%;
+  background: #c7d2da;
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 700;
+  cursor: help;
+  vertical-align: middle;
+}
+
+.form-field input,
+.form-field select {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  padding: 0.75rem 0.85rem;
+  border: 1px solid var(--give-line);
+  border-radius: 4px;
+  background: var(--give-card);
+  font: inherit;
+  color: var(--give-ink);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.form-field input:focus,
+.form-field select:focus {
+  outline: none;
+  border-color: var(--give-primary);
+  box-shadow: 0 0 0 3px rgba(30, 140, 190, 0.15);
+}
+
+.form-field.has-error input,
+.form-field.has-error select {
+  border-color: var(--give-required);
+  box-shadow: 0 0 0 3px rgba(217, 79, 79, 0.14);
+}
+
+/* Total + submit */
+.give-final-total {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin: 1.5rem 0 1rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid #eceff3;
+}
+
+.give-donation-total-label {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--give-ink);
+}
+
+.give-final-total-amount {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--give-primary);
+}
+
+.give-btn {
+  display: block;
+  width: 100%;
+  appearance: none;
+  border: 0;
+  border-radius: 4px;
+  background: var(--give-primary);
+  color: #fff;
+  padding: 0.95rem 1.25rem;
+  font: inherit;
+  font-size: 1.02rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.give-btn:hover:not(:disabled) {
+  background: var(--give-primary-dark);
+}
+
+.give-btn:disabled {
+  opacity: 0.65;
+  cursor: default;
+}
+
+.give-btn.is-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  cursor: wait;
+}
+
+.give-note {
+  margin: 0.75rem 0 0;
+  font-size: 0.86rem;
+  min-height: 1.2em;
+}
+
+.give-btn--link {
+  text-decoration: none;
+  text-align: center;
+}
+
+/* QR panel — the one addition to the live layout */
+.give-qr-panel {
+  position: sticky;
+  top: 1.5rem;
+  text-align: center;
+}
+
+.give-qr-panel__title {
+  margin: 0 0 0.15rem;
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
+.give-qr-panel__hint {
+  margin: 0 0 1rem;
+  font-size: 0.84rem;
+  color: var(--give-ink-soft);
+}
+
+.give-qr-panel__amount {
+  margin: 0;
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--give-primary);
+  line-height: 1.2;
+}
+
+.give-qr-panel__cause {
+  margin: 0.15rem 0 0;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--give-ink-soft);
+}
+
+.give-qr-panel__qrwrap {
+  position: relative;
+  width: min(200px, 100%);
+  margin: 1rem auto;
+}
+
+.give-qr-panel__qr {
+  width: 100%;
+  aspect-ratio: 1;
+  padding: 0.6rem;
+  display: grid;
+  place-items: center;
+  background: #fff;
+  border: 1px solid var(--give-line);
+  border-radius: 6px;
+}
+
+.give-qr-panel__qr img,
+.give-qr-panel__qr canvas {
+  width: 100% !important;
+  height: auto !important;
+  display: block;
+}
+
+.give-qr-panel__lockbadge {
+  position: absolute;
+  inset: auto 0 auto 0;
+  top: 50%;
+  transform: translateY(-50%);
+  display: none;
+  padding: 0.4rem 0;
+  background: rgba(255, 255, 255, 0.92);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--give-ink-soft);
+}
+
+/* Locked: the code on screen is a decoy, so blur it and kill the pay actions */
+.give-qr-panel.is-scrambled .give-qr-panel__qr {
+  filter: blur(4px) grayscale(1);
+  opacity: 0.55;
+}
+
+.give-qr-panel.is-scrambled .give-qr-panel__lockbadge {
+  display: block;
+}
+
+.give-qr-panel.is-scrambled .give-qr-panel__amount,
+.give-qr-panel.is-scrambled .give-qr-panel__cause {
+  color: var(--give-ink-soft);
+}
+
+.give-qr-panel__lock {
+  margin: 0 0 0.85rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--give-required);
+}
+
+.give-qr-panel__lock.is-info {
+  color: var(--give-ink-soft);
+}
+
+/* Non-UPI payment types are settled offline, so drop the QR entirely */
+.give-qr-panel.is-not-upi .give-qr-panel__qrwrap,
+.give-qr-panel.is-not-upi .give-qr-panel__hint,
+.give-qr-panel.is-not-upi .give-qr-panel__vpa,
+.give-qr-panel.is-not-upi [data-upi-launch],
+.give-qr-panel.is-not-upi [data-upi-copy] {
+  display: none;
+}
+
+.give-qr-panel__vpa {
+  margin: 0 0 1rem;
+  font-size: 0.86rem;
+  font-weight: 600;
+  word-break: break-all;
+}
+
+.give-btn.is-disabled,
+.give-btn[aria-disabled="true"] {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.give-btn--ghost {
+  background: transparent;
+  border: 1px solid var(--give-primary);
+  color: var(--give-primary);
+  margin-top: 0.6rem;
+  font-size: 0.92rem;
+  padding: 0.7rem 1rem;
+}
+
+.give-btn--ghost:hover:not(:disabled) {
+  background: rgba(30, 140, 190, 0.08);
+}
+
+.give-success {
+  margin-top: 1.5rem;
+  padding: 1.25rem;
+  border: 1px solid #b7e0c2;
+  border-radius: 6px;
+  background: #f3fbf5;
+  text-align: center;
+}
+
+.give-success__title {
+  margin: 0 0 0.35rem;
+  font-weight: 700;
+  color: #1f7a3f;
+}
+
+.give-success__meta {
+  margin: 0 0 0.9rem;
+  font-size: 0.86rem;
+  color: var(--give-ink-soft);
+}
+
+.give-success__meta--last {
+  margin: 0.9rem 0 0;
+}
+
+.give-success__qr {
+  display: grid;
+  place-items: center;
+  margin-top: 0.9rem;
+}
+
+.give-qr-panel__hint--foot {
+  margin: 1rem 0 0;
+}
+
+.give-clone-footer {
+  padding: 1.5rem 1.25rem 2.5rem;
+  text-align: center;
+  font-size: 0.82rem;
+  color: var(--give-ink-soft);
+}
+
+.give-clone-footer a {
+  color: var(--give-primary);
+}
+
+.btn-spinner {
+  width: 1rem;
+  height: 1rem;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: give-spin 0.7s linear infinite;
+}
+
+@keyframes give-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (max-width: 900px) {
+  .give-clone-grid {
+    grid-template-columns: 1fr;
+  }
+
+  /* Single column: the QR sits under the form so the amount fields come first */
+  .give-qr-panel {
+    position: static;
+  }
+}
+
+@media (max-width: 560px) {
+  .give-row {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+
+  .give-card {
+    padding: 1.25rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn-spinner {
+    animation: none;
+    border-right-color: currentColor;
+    opacity: 0.6;
+  }
+}

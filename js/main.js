@@ -238,6 +238,7 @@
       if (session && shareUrl) {
         const url = new URL("donate.html", location.href);
         url.searchParams.set("employeeId", session.id);
+        if (session.name) url.searchParams.set("fundraiser", session.name);
         url.searchParams.delete("mode");
         shareUrl.value = url.href;
       }
@@ -249,16 +250,45 @@
     sticky?.classList.toggle("is-locked", locked);
   }
 
+  function fieldValue(selector) {
+    return (document.querySelector(selector)?.value || "").trim();
+  }
+
+  /** Donor name is split into first/last, mirroring the live Give form. */
   function getFormDonorName() {
-    const mode = getDonateMode();
-    if (mode === "employee") {
-      return (
-        document.querySelector("[data-emp-donor-name]")?.value ||
-        document.querySelector("[data-donor-name]")?.value ||
-        ""
-      ).trim();
-    }
-    return (document.querySelector("[data-donor-name]")?.value || "").trim();
+    const joined = [fieldValue("[data-donor-first]"), fieldValue("[data-donor-last]")]
+      .filter(Boolean)
+      .join(" ")
+      .trim();
+    return joined || fieldValue("[data-donor-name]");
+  }
+
+  function getPaymentType() {
+    return fieldValue("[data-payment-type]");
+  }
+
+  /** Each payment type carries a different reference number. */
+  const PAYMENT_ID_LABELS = {
+    UPI: ["Payment Id (UPI UTR)", "12-digit UTR from your UPI app"],
+    Swipe: ["Payment Id (Approval Code)", "Card approval / RRN code"],
+    Cash: ["Payment Id (Receipt No.)", "Cash receipt number"],
+    "NEFT/RTGS": ["Payment Id (Bank UTR)", "UTR from the bank transfer"],
+    Cheque: ["Payment Id (Cheque No.)", "Cheque number"],
+  };
+
+  function syncPaymentIdLabel() {
+    const [label, placeholder] =
+      PAYMENT_ID_LABELS[getPaymentType()] || ["Payment Id", "Payment Id"];
+    const labelEl = document.querySelector("[data-payment-id-label]");
+    if (labelEl) labelEl.textContent = label;
+    const input = document.querySelector("[data-payment-id]");
+    if (input) input.placeholder = placeholder;
+  }
+
+  /** Unset counts as UPI so the QR is ready before a payment type is picked. */
+  function isUpiPayment() {
+    const type = getPaymentType().toUpperCase();
+    return !type || type === "UPI";
   }
 
   function formatIst(date = new Date()) {
@@ -337,12 +367,18 @@
         "utr",
         "paymentStatus",
         "donorName",
+        "firstName",
+        "lastName",
         "email",
         "phone",
         "pan",
+        "aadhar",
+        "city",
         "pinCode",
         "cause",
         "amount",
+        "paymentType",
+        "paymentId",
         "fundraiser",
         "employeeId",
         "timeIST",
@@ -353,12 +389,18 @@
         optionalField(r.utr),
         optionalField(r.paymentStatus, "success"),
         donorDisplayName(r.donorName),
+        optionalField(r.firstName),
+        optionalField(r.lastName),
         optionalField(r.email),
         optionalField(r.phone),
         optionalField(r.pan),
+        optionalField(r.aadhar),
+        optionalField(r.city),
         optionalField(r.pinCode),
         optionalField(r.cause, "null"),
         r.amount ?? "null",
+        optionalField(r.paymentType),
+        optionalField(r.paymentId),
         optionalField(r.fundraiser),
         optionalField(r.employeeId),
         optionalField(r.timeIST),
@@ -383,7 +425,7 @@
 
     if (!records.length) {
       tbody.innerHTML =
-        '<tr><td colspan="13">No records yet. Mark a payment done on Donate first.</td></tr>';
+        '<tr><td colspan="17">No records yet. Record a donation on Donate first.</td></tr>';
       return;
     }
 
@@ -398,9 +440,13 @@
           <td>${escapeHtml(optionalField(r.email, "—"))}</td>
           <td>${escapeHtml(optionalField(r.phone, "—"))}</td>
           <td>${escapeHtml(optionalField(r.pan, "—"))}</td>
+          <td>${escapeHtml(optionalField(r.aadhar, "—"))}</td>
+          <td>${escapeHtml(optionalField(r.city, "—"))}</td>
           <td>${escapeHtml(optionalField(r.pinCode, "—"))}</td>
           <td>${escapeHtml(optionalField(r.cause, "—"))}</td>
           <td>₹${Number(r.amount || 0).toLocaleString("en-IN")}</td>
+          <td>${escapeHtml(optionalField(r.paymentType, "—"))}</td>
+          <td>${escapeHtml(optionalField(r.paymentId, "—"))}</td>
           <td>${escapeHtml(optionalField(r.fundraiser, "—"))}</td>
           <td>${escapeHtml(optionalField(r.employeeId, "—"))}</td>
         </tr>`
@@ -650,8 +696,8 @@
       amountImpact.textContent = impact
         ? `₹${formatAmountDisplay(amount)} — ${impact}`
         : amount
-          ? `₹${formatAmountDisplay(amount)} · Minimum ₹100`
-          : "Choose or type an amount (min ₹100).";
+          ? `₹${formatAmountDisplay(amount)} · Minimum ₹1`
+          : "Choose or type an amount (min ₹1).";
     }
   }
 
@@ -716,11 +762,12 @@
     );
     if (fromField > 0) return String(fromField);
     const selected = document.querySelector(".amount-option.is-selected");
-    return selected?.dataset.amount || "500";
+    return selected?.dataset.amount || "1";
   }
 
   function getDonateCause() {
     return (
+      fieldValue("[data-cause-select]") ||
       document.querySelector(".cause-option input:checked")?.closest(".cause-option")
         ?.dataset.label ||
       document.querySelector(".cause-option.is-selected")?.dataset.label ||
@@ -736,11 +783,13 @@
     if (summary) {
       summary.innerHTML = `You're giving <strong>${label}</strong> for <strong>${cause}</strong>`;
     }
+    const total = document.querySelector("[data-donate-total]");
+    if (total) total.textContent = label;
     if (stickyAmount) stickyAmount.textContent = label;
     if (stickyCause) stickyCause.textContent = cause;
   }
   updateDonateSummary();
-  syncAmountChips(parseAmountDigits(customAmount?.value) || 500);
+  syncAmountChips(parseAmountDigits(customAmount?.value) || 1);
 
   function gatewayConfig() {
     return (window.WFD_DONATE || {}).gateway || {};
@@ -867,10 +916,12 @@
     let want = decodeURIComponent(String(wantRaw)).toLowerCase().trim();
     want = want.replace(/&amp;/g, "&").replace(/\+/g, " ");
 
+    // Cause labels match the live Give form; older links still resolve here.
     const aliases = {
-      women: "women empowerment and hygiene",
-      "women-empowerment": "women empowerment and hygiene",
-      hygiene: "women empowerment and hygiene",
+      women: "women empowerment",
+      "women-empowerment": "women empowerment",
+      hygiene: "women empowerment",
+      "women empowerment and hygiene": "women empowerment",
       child: "child education",
       "child-education": "child education",
       education: "child education",
@@ -879,11 +930,23 @@
       dog: "animal care",
       dogs: "animal care",
       "dog-feeding": "animal care",
-      emergency: "emergency & volunteer camp support",
-      environment: "emergency & volunteer camp support",
-      camp: "emergency & volunteer camp support",
+      environment: "environment",
+      emergency: "environment",
+      camp: "environment",
+      "emergency & volunteer camp support": "environment",
     };
     if (aliases[want]) want = aliases[want];
+
+    const select = document.querySelector("[data-cause-select]");
+    if (select) {
+      const option = Array.from(select.options).find((opt) => {
+        const label = opt.value.toLowerCase().trim();
+        return Boolean(label) && (label === want || label.includes(want) || want.includes(label));
+      });
+      if (!option) return false;
+      select.value = option.value;
+      return true;
+    }
 
     let matched = null;
     document.querySelectorAll(".cause-option").forEach((opt) => {
@@ -930,13 +993,19 @@
       filled += 1;
     };
 
-    // Razorpay-available autofill only (no PAN / pin — not on Payments API)
-    fill("[data-donor-name]", payload.name);
-    fill("[data-emp-donor-name]", payload.name);
+    // Razorpay-available autofill only (no PAN / Aadhar / city — not on Payments API)
+    if (payload.name) {
+      const [first, ...rest] = String(payload.name).trim().split(/\s+/);
+      fill("[data-donor-first]", first);
+      if (rest.length) fill("[data-donor-last]", rest.join(" "));
+      fill("[data-donor-name]", payload.name);
+    }
     fill("[data-donor-email]", payload.email);
     fill("[data-donor-phone]", payload.phone);
     fill("[data-gateway-txn]", payload.txnid);
     fill("[data-gateway-utr]", payload.utr);
+    // The live form's required Payment Id is the UPI reference (Razorpay RRN).
+    fill("[data-payment-id]", payload.utr || payload.txnid);
     fill(
       "[data-gateway-status]",
       payload.status === "captured" || payload.status === "authorized"
@@ -946,7 +1015,7 @@
 
     if (payload.amount && customAmount) {
       const amount = parseAmountDigits(payload.amount);
-      if (amount >= 100) {
+      if (amount >= 1) {
         customAmount.value = formatAmountDisplay(amount);
         customAmount.dataset.raw = String(amount);
         syncAmountChips(amount);
@@ -955,55 +1024,17 @@
     }
     if (payload.cause && setCauseByLabel(payload.cause)) filled += 1;
 
-    if (openReceipt) {
-      const details = document.querySelector(".receipt-details");
-      if (details) details.open = true;
-    }
-
     updateDonateSummary();
 
     if (filled > 0) {
       const extra = [payload.method, payload.vpa].filter(Boolean).join(" · ");
       showGatewayBanner(
-        source === "demo"
-          ? `Razorpay demo payment loaded${extra ? ` (${extra})` : ""}. PAN & pin stay manual — Razorpay doesn’t return them.`
-          : source === "callback"
-            ? `Razorpay callback received${extra ? ` (${extra})` : ""}. Receipt details opened — add PAN/pin if you need 80G.`
-            : `Filled from Razorpay payment fields${extra ? ` (${extra})` : ""}. Add PAN/pin yourself if you need 80G.`
+        `Filled from the Razorpay payment${extra ? ` (${extra})` : ""}. PAN, Aadhar and city stay manual — Razorpay doesn’t return them.`
       );
       if (resetPaid) resetPaymentDoneButton();
       scheduleUpiRefresh();
     }
     return filled > 0;
-  }
-
-  /** Demo payment.captured shaped like Razorpay, using the amount/cause on screen. */
-  function buildDemoCallbackPayload() {
-    const demo = { ...(gatewayConfig().demoPayment || {}) };
-    const amount = Number(getDonateAmount() || 0);
-    if (amount >= 100) demo.amount = Math.round(amount * 100);
-    const cause = getDonateCause();
-    if (cause) {
-      demo.description = cause;
-      demo.notes = { ...(demo.notes || {}), cause };
-    }
-    const stamp = Date.now().toString(36).toUpperCase();
-    demo.id = `pay_Demo${stamp}`;
-    demo.order_id = `order_Demo${stamp}`;
-    if (!demo.acquirer_data?.rrn) {
-      demo.acquirer_data = {
-        ...(demo.acquirer_data || {}),
-        rrn: String(Math.floor(1e11 + Math.random() * 9e11)),
-      };
-    }
-    return parseGatewayPayload(demo);
-  }
-
-  function openTaxReceiptDetails() {
-    const details = document.querySelector(".receipt-details");
-    if (!details) return;
-    details.open = true;
-    details.scrollIntoView({ behavior: "smooth", block: "nearest" });
   }
 
   function buildWebhookPayload(record) {
@@ -1118,6 +1149,34 @@
     setCauseByLabel(params.get("cause"));
     updateDonateSummary();
   }
+
+  /**
+   * Per-fundraiser links, like the live /donations/amir/ page: accept either
+   * ?fundraiser=Amir or a /donations/<name>/ style path.
+   */
+  function fundraiserFromLocation() {
+    const fromQuery = params.get("fundraiser") || params.get("fr");
+    if (fromQuery) return decodeURIComponent(fromQuery).trim();
+    const segments = location.pathname.split("/").filter(Boolean);
+    const donationsAt = segments.lastIndexOf("donations");
+    const slug = donationsAt >= 0 ? segments[donationsAt + 1] : "";
+    if (!slug || /\.html?$/i.test(slug)) return "";
+    return decodeURIComponent(slug)
+      .replace(/[-_]+/g, " ")
+      .replace(/\b\w/g, (c) => c.toUpperCase())
+      .trim();
+  }
+
+  const fundraiserFromUrl = fundraiserFromLocation();
+  const fundraiserField = document.querySelector("[data-fundraiser]");
+  if (fundraiserField && fundraiserFromUrl) {
+    fundraiserField.value = fundraiserFromUrl;
+    fundraiserField.dataset.autofill = "0";
+    const heroEyebrow = document.querySelector(".page-hero--donate .eyebrow");
+    if (heroEyebrow) heroEyebrow.textContent = `Donate · ${fundraiserFromUrl}`;
+    const pageTitle = document.querySelector("[data-fundraiser-title]");
+    if (pageTitle) pageTitle.textContent = fundraiserFromUrl;
+  }
   const gatewayFromUrl = parseGatewayPayload(params);
   const hasGatewayReturn = Boolean(
     gatewayFromUrl.email ||
@@ -1162,7 +1221,7 @@
     return `upi://pay?${q.toString()}`;
   }
 
-  async function renderUpiQr(upiUri, mount) {
+  async function renderUpiQr(upiUri, mount, { label = "UPI QR code" } = {}) {
     if (!mount) return;
     mount.innerHTML = "";
     if (window.QRCode && typeof window.QRCode.toCanvas === "function") {
@@ -1172,17 +1231,33 @@
         margin: 1,
         color: { dark: "#161616", light: "#ffffff" },
       });
+      canvas.setAttribute("aria-label", label);
       mount.appendChild(canvas);
       return;
     }
     const img = document.createElement("img");
-    img.alt = "UPI QR code";
+    img.alt = label;
     img.width = 196;
     img.height = 196;
     img.src = `https://api.qrserver.com/v1/create-qr-code/?size=196x196&data=${encodeURIComponent(
       upiUri
     )}`;
     mount.appendChild(img);
+  }
+
+  let scrambleSeed = "";
+
+  /** Random payload so the locked QR looks like a code but scans to nothing. */
+  function scrambleQrData() {
+    if (!scrambleSeed) {
+      const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+      let out = "";
+      for (let i = 0; i < 96; i += 1) {
+        out += chars[Math.floor(Math.random() * chars.length)];
+      }
+      scrambleSeed = out;
+    }
+    return scrambleSeed;
   }
 
   async function renderWhatsAppQr(waUrl, mount) {
@@ -1219,17 +1294,38 @@
   }
 
   function resetPaymentDoneButton() {
-    const paidBtn = document.querySelector("[data-payment-done]");
-    if (!paidBtn) return;
-    paidBtn.disabled = false;
-    paidBtn.classList.remove("is-loading");
-    paidBtn.removeAttribute("aria-busy");
-    paidBtn.textContent = "I’ve paid (demo)";
+    const submitBtn = document.querySelector("[data-donate-submit]");
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.classList.remove("is-loading");
+      submitBtn.removeAttribute("aria-busy");
+      submitBtn.textContent = "Donate Now";
+    }
     const success = document.querySelector("[data-payment-success]");
     if (success) {
       success.hidden = true;
       success.classList.remove("is-visible");
     }
+  }
+
+  function clearFieldErrors() {
+    document
+      .querySelectorAll(".form-field.has-error")
+      .forEach((el) => el.classList.remove("has-error"));
+  }
+
+  /** Flag a required field, focus it, and explain in the shared note line. */
+  function failValidation(selector, message) {
+    const noteEl = document.querySelector("[data-form-note]");
+    const field = selector ? document.querySelector(selector) : null;
+    field?.closest(".form-field")?.classList.add("has-error");
+    if (noteEl) {
+      noteEl.textContent = message;
+      noteEl.style.color = "var(--wfd-primary)";
+    }
+    field?.scrollIntoView({ behavior: "smooth", block: "center" });
+    field?.focus({ preventScroll: true });
+    return false;
   }
 
   function setPaidButtonLoading(paidBtn, loading, label) {
@@ -1255,124 +1351,131 @@
     return bits.join(" · ");
   }
 
+  function requireStaffSession() {
+    if (getDonateMode() !== "employee" || getSessionEmployee()) return true;
+    const noteEl = document.querySelector("[data-form-note]");
+    if (noteEl) {
+      noteEl.textContent = "Log in with your employee ID before recording a gift.";
+      noteEl.style.color = "var(--wfd-primary)";
+    }
+    document.querySelector("[data-login-id-inline]")?.focus();
+    document
+      .querySelector("[data-employee-gate]")
+      ?.scrollIntoView({ behavior: "smooth", block: "center" });
+    return false;
+  }
+
   /**
-   * Demo flow: wait up to 5s for a Razorpay-shaped callback, autofill + open
-   * tax-receipt details, then save the donation record.
+   * Donate Now — mirrors the live Give form: required donor, cause, payment
+   * type, Payment Id and fundraiser, then stores the donation record.
    */
-  async function recordDemoPayment() {
+  async function submitDonation() {
     const upiForm = document.querySelector("[data-upi-form]");
     if (!upiForm) return;
     const noteEl = upiForm.querySelector("[data-form-note]");
-    const paidBtn = upiForm.querySelector("[data-payment-done]");
+    const submitBtn = upiForm.querySelector("[data-donate-submit]");
     const mode = getDonateMode();
     const employeeId =
       document.querySelector("[data-employee-id]")?.value || "";
 
-    if (paidBtn?.disabled && paidBtn.classList.contains("is-loading")) return;
-    if (paidBtn?.disabled && paidBtn.textContent === "Payment recorded") return;
+    if (submitBtn?.disabled) return;
+    if (!requireStaffSession()) return;
 
-    if (mode === "employee" && !getSessionEmployee()) {
-      if (noteEl) {
-        noteEl.textContent =
-          "Log in with your employee ID before recording a payment.";
-        noteEl.style.color = "var(--wfd-primary)";
-      }
-      document.querySelector("[data-login-id-inline]")?.focus();
-      document
-        .querySelector("[data-employee-gate]")
-        ?.scrollIntoView({ behavior: "smooth", block: "center" });
-      return;
-    }
+    clearFieldErrors();
 
-    const amountNow = getDonateAmount();
-    if (!amountNow || Number(amountNow) < 100) {
-      if (noteEl) {
-        noteEl.textContent = "Minimum donation amount is ₹100.";
-        noteEl.style.color = "var(--wfd-primary)";
-      }
-      return;
-    }
-
-    const CALLBACK_WAIT_MS = 5000;
-    setPaidButtonLoading(paidBtn, true, "Waiting for Razorpay…");
-    if (noteEl) {
-      noteEl.textContent =
-        "Confirming with Razorpay (demo callback, up to 5 seconds)…";
-      noteEl.style.color = "";
-    }
-    showGatewayBanner("Waiting for Razorpay payment.captured callback…");
-
-    await new Promise((resolve) => setTimeout(resolve, CALLBACK_WAIT_MS));
-
-    // Auto-fire Razorpay-shaped callback → fill receipt fields + open details
-    applyGatewayAutofill(buildDemoCallbackPayload(), {
-      openReceipt: mode === "donor",
-      source: "callback",
-      resetPaid: false,
-    });
-    if (mode === "donor") openTaxReceiptDetails();
-
-    // Re-read form after autofill
-    const donorNow = getFormDonorName();
-    const emailNow =
-      mode === "donor"
-        ? (upiForm.querySelector("[data-donor-email]")?.value || "").trim()
-        : "";
-    const phoneNow =
-      mode === "donor"
-        ? (upiForm.querySelector("[data-donor-phone]")?.value || "").trim()
-        : "";
-    const panNow =
-      mode === "donor"
-        ? (upiForm.querySelector("[data-donor-pan]")?.value || "")
-            .trim()
-            .toUpperCase()
-        : "";
-    const pinNow =
-      mode === "donor"
-        ? (upiForm.querySelector("[data-donor-pin]")?.value || "").trim()
-        : "";
-    const fundraiserNow =
-      mode === "employee"
-        ? (upiForm.querySelector("[data-fundraiser]")?.value || "").trim()
-        : "";
+    const firstNow = fieldValue("[data-donor-first]");
+    const lastNow = fieldValue("[data-donor-last]");
+    const emailNow = fieldValue("[data-donor-email]");
+    const phoneNow = fieldValue("[data-donor-phone]");
+    const panNow = fieldValue("[data-donor-pan]").toUpperCase();
+    const aadharNow = fieldValue("[data-donor-aadhar]").replace(/\s/g, "");
+    const cityNow = fieldValue("[data-donor-city]");
+    const pinNow = fieldValue("[data-donor-pin]");
+    const paymentTypeNow = getPaymentType();
+    const paymentIdNow = fieldValue("[data-payment-id]");
+    const fundraiserNow = fieldValue("[data-fundraiser]");
     const causeNow = getDonateCause();
-    const amountAfter = getDonateAmount() || amountNow;
+    const amountAfter = getDonateAmount();
 
-    if (emailNow && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailNow)) {
-      setPaidButtonLoading(paidBtn, false, "I’ve paid (demo)");
-      if (noteEl) {
-        noteEl.textContent = "Enter a valid email address, or leave it blank.";
-        noteEl.style.color = "var(--wfd-primary)";
-      }
+    if (!amountAfter || Number(amountAfter) < 1) {
+      failValidation("[data-custom-amount]", "Enter the donation amount.");
+      return;
+    }
+    if (!firstNow) {
+      failValidation("[data-donor-first]", "First Name is required.");
+      return;
+    }
+    if (!emailNow) {
+      failValidation("[data-donor-email]", "Email Address is required.");
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailNow)) {
+      failValidation("[data-donor-email]", "Enter a valid email address.");
+      return;
+    }
+    if (!causeNow || causeNow === "Donation") {
+      failValidation("[data-cause-select]", "Please select a Cause.");
       return;
     }
     if (phoneNow && !/^\d{10}$/.test(phoneNow)) {
-      setPaidButtonLoading(paidBtn, false, "I’ve paid (demo)");
-      if (noteEl) {
-        noteEl.textContent =
-          "Enter a valid 10-digit mobile number, or leave it blank.";
-        noteEl.style.color = "var(--wfd-primary)";
-      }
+      failValidation(
+        "[data-donor-phone]",
+        "Enter a valid 10-digit mobile number, or leave it blank."
+      );
+      return;
+    }
+    if (panNow && !/^[A-Z]{5}\d{4}[A-Z]$/.test(panNow)) {
+      failValidation(
+        "[data-donor-pan]",
+        "PAN should look like ABCDE1234F, or leave it blank."
+      );
+      return;
+    }
+    if (aadharNow && !/^\d{12}$/.test(aadharNow)) {
+      failValidation(
+        "[data-donor-aadhar]",
+        "Aadhar should be 12 digits, or leave it blank."
+      );
       return;
     }
     if (pinNow && !/^\d{6}$/.test(pinNow)) {
-      setPaidButtonLoading(paidBtn, false, "I’ve paid (demo)");
-      if (noteEl) {
-        noteEl.textContent =
-          "Enter a valid 6-digit pin code, or leave it blank.";
-        noteEl.style.color = "var(--wfd-primary)";
-      }
+      failValidation(
+        "[data-donor-pin]",
+        "Enter a valid 6-digit pin code, or leave it blank."
+      );
+      return;
+    }
+    if (!paymentTypeNow) {
+      failValidation("[data-payment-type]", "Please select a Payment Type.");
+      return;
+    }
+    if (!paymentIdNow) {
+      const hint = (PAYMENT_ID_LABELS[paymentTypeNow] || [])[1];
+      failValidation(
+        "[data-payment-id]",
+        hint
+          ? `Enter the ${hint.charAt(0).toLowerCase()}${hint.slice(1)}.`
+          : "Enter the Payment Id for this donation."
+      );
+      return;
+    }
+    if (!fundraiserNow) {
+      failValidation("[data-fundraiser]", "Fundraiser is required.");
       return;
     }
 
+    setPaidButtonLoading(submitBtn, true, "Saving donation…");
+
+    const donorNow = [firstNow, lastNow].filter(Boolean).join(" ");
     const transactionId = makeTxnId();
     const timeIST = formatIst();
     const donorName = donorDisplayName(donorNow);
     const gatewayTxnId = (
       upiForm.querySelector("[data-gateway-txn]")?.value || ""
     ).trim();
-    const utrNow = (upiForm.querySelector("[data-gateway-utr]")?.value || "").trim();
+    const utrNow =
+      (upiForm.querySelector("[data-gateway-utr]")?.value || "").trim() ||
+      paymentIdNow;
     const paymentStatus =
       normalizeGatewayStatus(
         upiForm.querySelector("[data-gateway-status]")?.value || "success"
@@ -1383,12 +1486,18 @@
       utr: optionalField(utrNow),
       paymentStatus,
       donorName,
+      firstName: optionalField(firstNow),
+      lastName: optionalField(lastNow),
       email: optionalField(emailNow),
       phone: optionalField(phoneNow),
       pan: optionalField(panNow),
+      aadhar: optionalField(aadharNow),
+      city: optionalField(cityNow),
       pinCode: optionalField(pinNow),
       cause: causeNow || "null",
       amount: Number(amountAfter),
+      paymentType: optionalField(paymentTypeNow),
+      paymentId: optionalField(paymentIdNow),
       fundraiser: optionalField(fundraiserNow),
       employeeId: optionalField(employeeId),
       timeIST,
@@ -1436,16 +1545,82 @@
       }
       success.scrollIntoView({ behavior: "smooth", block: "nearest" });
     }
-    setPaidButtonLoading(paidBtn, false, "Payment recorded");
-    if (paidBtn) paidBtn.disabled = true;
+    setPaidButtonLoading(submitBtn, false, "Donation recorded");
+    if (submitBtn) submitBtn.disabled = true;
     if (noteEl) {
       noteEl.textContent =
         mode === "donor"
-          ? "Razorpay fields filled. Add PAN/pin for 80G if needed, then share UTR on WhatsApp."
-          : "Saved with your staff ID. Share the UTR on WhatsApp if you like.";
+          ? `Saved as ${transactionId}. Your 80G receipt goes to ${emailNow}.`
+          : `Saved as ${transactionId} against ${fundraiserNow}.`;
       noteEl.style.color = "";
     }
   }
+
+  /**
+   * Required fields still missing before a real QR may be shown. Payment Id is
+   * deliberately excluded: the donor only gets that reference from their UPI
+   * app after scanning, so gating on it would deadlock the payment.
+   */
+  function qrBlockers() {
+    const missing = [];
+    if (Number(getDonateAmount() || 0) < 1) missing.push("Amount");
+    if (!fieldValue("[data-donor-first]")) missing.push("First Name");
+    const email = fieldValue("[data-donor-email]");
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      missing.push("Email Address");
+    }
+    const cause = getDonateCause();
+    if (!cause || cause === "Donation") missing.push("Cause");
+    const phone = fieldValue("[data-donor-phone]");
+    if (phone && !/^\d{10}$/.test(phone)) missing.push("Phone");
+    const pan = fieldValue("[data-donor-pan]").toUpperCase();
+    if (pan && !/^[A-Z]{5}\d{4}[A-Z]$/.test(pan)) missing.push("PAN No.");
+    const aadhar = fieldValue("[data-donor-aadhar]").replace(/\s/g, "");
+    if (aadhar && !/^\d{12}$/.test(aadhar)) missing.push("Aadhar");
+    const pin = fieldValue("[data-donor-pin]");
+    if (pin && !/^\d{6}$/.test(pin)) missing.push("Pin Code");
+    if (!getPaymentType()) missing.push("Payment Type");
+    if (!fieldValue("[data-fundraiser]")) missing.push("Fundraiser");
+    return missing;
+  }
+
+  function listFields(items) {
+    if (items.length === 1) return items[0];
+    return `${items.slice(0, -1).join(", ")} and ${items[items.length - 1]}`;
+  }
+
+  function setUpiActionsEnabled(result, enabled, upiUri) {
+    const launch = result.querySelector("[data-upi-launch]");
+    if (launch) {
+      launch.classList.toggle("is-disabled", !enabled);
+      launch.setAttribute("aria-disabled", enabled ? "false" : "true");
+      if (enabled) {
+        launch.href = upiUri;
+      } else {
+        launch.removeAttribute("href");
+      }
+    }
+    const copyBtn = result.querySelector("[data-upi-copy]");
+    if (copyBtn) {
+      copyBtn.disabled = !enabled;
+      if (!enabled) {
+        copyBtn.onclick = null;
+        copyBtn.textContent = "Copy UPI link";
+        return;
+      }
+      copyBtn.onclick = async () => {
+        try {
+          await navigator.clipboard.writeText(upiUri);
+          copyBtn.textContent = "Copied";
+          setTimeout(() => (copyBtn.textContent = "Copy UPI link"), 1500);
+        } catch {
+          copyBtn.textContent = "Copy failed";
+        }
+      };
+    }
+  }
+
+  let qrLockState = null;
 
   async function refreshUpiPayment() {
     const upiForm = document.querySelector("[data-upi-form]");
@@ -1465,66 +1640,121 @@
     result.hidden = false;
     result.classList.add("is-visible");
 
-    if (!vpa || vpa.includes("REPLACE")) {
-      if (noteEl) {
+    const qrMount = result.querySelector("[data-upi-qr]");
+    const lockNote = result.querySelector("[data-upi-lock]");
+    const amountLabel = result.querySelector("[data-upi-amount-label]");
+    const causeLabel = result.querySelector("[data-upi-cause-label]");
+    const vpaLabel = result.querySelector("[data-upi-vpa]");
+    const configMissing = !vpa || vpa.includes("REPLACE");
+    const paymentType = getPaymentType();
+    syncPaymentIdLabel();
+    // Cash, Swipe, NEFT/RTGS and Cheque are collected offline — no QR at all
+    const nonUpi = Boolean(paymentType) && !isUpiPayment();
+    const blockers = configMissing || nonUpi ? [] : qrBlockers();
+    const locked = configMissing || blockers.length > 0;
+
+    if (amountLabel) {
+      amountLabel.textContent = `₹${Number(amount || 0).toLocaleString("en-IN")}`;
+    }
+    if (causeLabel) causeLabel.textContent = cause;
+
+    const titleEl = result.querySelector("[data-upi-title]");
+    if (titleEl) {
+      if (!titleEl.dataset.defaultTitle) {
+        titleEl.dataset.defaultTitle = titleEl.textContent;
+      }
+      titleEl.textContent = nonUpi
+        ? `${paymentType} payment`
+        : titleEl.dataset.defaultTitle;
+    }
+
+    result.classList.toggle("is-not-upi", nonUpi);
+    result.classList.toggle("is-scrambled", locked && !nonUpi);
+    if (lockNote) {
+      lockNote.classList.toggle("is-info", nonUpi);
+      lockNote.hidden = !locked && !nonUpi;
+      lockNote.textContent = nonUpi
+        ? `${paymentType} donations are recorded offline — no QR code needed. Enter the ${paymentType} reference as the Payment Id.`
+        : configMissing
+          ? "Set the official UPI ID in js/upi-config.js before taking live donations."
+          : locked
+            ? `Fill in ${listFields(blockers)} to unlock the payment QR code.`
+            : "";
+    }
+
+    if (nonUpi) {
+      if (vpaLabel) vpaLabel.textContent = "";
+      setUpiActionsEnabled(result, false);
+      if (stickyPay) stickyPay.removeAttribute("href");
+      if (qrMount) qrMount.innerHTML = "";
+      qrLockState = null;
+      return;
+    }
+
+    if (locked) {
+      if (vpaLabel) vpaLabel.textContent = "QR locked until the form is complete";
+      setUpiActionsEnabled(result, false);
+      if (stickyPay) stickyPay.removeAttribute("href");
+      if (configMissing && noteEl) {
         noteEl.textContent =
           "Set the official UPI ID in js/upi-config.js before taking live donations.";
         noteEl.style.color = "var(--wfd-primary)";
       }
-      return;
-    }
-
-    if (!amount || Number(amount) < 100) {
-      if (noteEl) {
-        noteEl.textContent = "Minimum donation amount is ₹100.";
-        noteEl.style.color = "var(--wfd-primary)";
+      // Repaint the decoy once per lock, not on every keystroke.
+      if (qrLockState !== "locked") {
+        qrLockState = "locked";
+        await renderUpiQr(scrambleQrData(), qrMount, {
+          label: "Locked QR code placeholder",
+        });
       }
       return;
     }
 
-    if (noteEl && !upiForm.querySelector("[data-payment-done]")?.disabled) {
+    if (noteEl && !upiForm.querySelector("[data-donate-submit]")?.disabled) {
       noteEl.textContent = "";
       noteEl.style.color = "";
     }
 
     const upiUri = buildUpiUri({ vpa, payeeName, amount, note });
-    result.querySelector("[data-upi-amount-label]").textContent = `₹${Number(
-      amount
-    ).toLocaleString("en-IN")}`;
-    result.querySelector("[data-upi-cause-label]").textContent = cause;
-    result.querySelector("[data-upi-vpa]").textContent = `Pay to ${vpa}`;
+    if (vpaLabel) vpaLabel.textContent = `Pay to ${vpa}`;
 
-    const launch = result.querySelector("[data-upi-launch]");
-    if (launch) launch.href = upiUri;
+    setUpiActionsEnabled(result, true, upiUri);
     if (stickyPay) stickyPay.href = upiUri;
     if (stickyBar) stickyBar.classList.add("is-visible");
     stickyBar?.removeAttribute("hidden");
 
-    const copyBtn = result.querySelector("[data-upi-copy]");
-    if (copyBtn) {
-      copyBtn.onclick = async () => {
-        try {
-          await navigator.clipboard.writeText(upiUri);
-          copyBtn.textContent = "Copied";
-          setTimeout(() => (copyBtn.textContent = "Copy UPI link"), 1500);
-        } catch {
-          copyBtn.textContent = "Copy failed";
-        }
-      };
-    }
-
-    await renderUpiQr(upiUri, result.querySelector("[data-upi-qr]"));
+    qrLockState = upiUri;
+    await renderUpiQr(upiUri, qrMount);
   }
 
   const upiForm = document.querySelector("[data-upi-form]");
   if (upiForm) {
-    upiForm.addEventListener("submit", (e) => e.preventDefault());
-    upiForm.querySelector("[data-payment-done]")?.addEventListener("click", () => {
-      recordDemoPayment();
+    upiForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      submitDonation();
     });
-    // Live QR on first paint + whenever amount/cause changes
+    // Cause and donor name ride along in the UPI note, so the QR follows them
+    upiForm.querySelector("[data-cause-select]")?.addEventListener("change", () => {
+      resetPaymentDoneButton();
+      refreshUpiPayment();
+    });
+    // Payment type renames the Payment Id field and decides if a QR applies
+    upiForm.querySelector("[data-payment-type]")?.addEventListener("change", () => {
+      syncPaymentIdLabel();
+      resetPaymentDoneButton();
+      refreshUpiPayment();
+    });
+    // Every required field feeds the QR lock, so re-check on any edit
+    upiForm.querySelectorAll("input, select").forEach((el) => {
+      el.addEventListener("input", () => {
+        el.closest(".form-field")?.classList.remove("has-error");
+        scheduleUpiRefresh();
+      });
+      el.addEventListener("change", scheduleUpiRefresh);
+    });
+    // Auto QR on first paint + whenever amount/cause/donor changes
     refreshUpiPayment();
-    ["data-donor-name", "data-emp-donor-name", "data-fundraiser"].forEach((sel) => {
+    ["data-donor-first", "data-donor-last", "data-fundraiser"].forEach((sel) => {
       upiForm.querySelector(`[${sel}]`)?.addEventListener("change", scheduleUpiRefresh);
     });
 
@@ -1702,70 +1932,21 @@
       });
   });
 
-  // Festival status bar + emoji bomb
+  // Festival greeting bar — only on real festival dates from js/festivals.js
   const festiveBar = document.querySelector("[data-festive-bar]");
   const festiveLabel = document.querySelector("[data-festive-label]");
-  const DEMO_FESTIVAL = {
-    id: "demo",
-    name: "Festival vibes",
-    emojis: ["🪔", "🎄", "🇮🇳", "🎨", "✨", "🎆", "🎁", "💛", "🧡", "💚"],
-  };
-
-  function showFestiveBar(festival) {
-    if (!festiveBar || !festival) return;
-    festiveBar.hidden = false;
-    festiveBar.classList.add("is-visible");
-    document.body.classList.add("has-festive-bar");
-    if (festiveLabel) festiveLabel.textContent = `${festival.emojis[0] || "🎉"} ${festival.name}`;
-  }
-
-  function fireEmojiBomb(festival = DEMO_FESTIVAL) {
-    showFestiveBar(festival);
-    const layer = document.createElement("div");
-    layer.className = "emoji-bomb";
-    layer.setAttribute("aria-hidden", "true");
-    document.body.appendChild(layer);
-
-    const emojis = festival.emojis?.length ? festival.emojis : DEMO_FESTIVAL.emojis;
-    const count = reduced ? 12 : 42;
-    for (let i = 0; i < count; i += 1) {
-      const bit = document.createElement("span");
-      bit.className = "emoji-bomb__bit";
-      bit.textContent = emojis[i % emojis.length];
-      const startX = 8 + Math.random() * 84;
-      bit.style.left = `${startX}vw`;
-      bit.style.setProperty("--dx", `${(Math.random() - 0.5) * 160}px`);
-      bit.style.setProperty("--rot", `${(Math.random() - 0.5) * 540}deg`);
-      bit.style.setProperty("--delay", `${Math.random() * 0.35}s`);
-      bit.style.setProperty("--dur", `${1.4 + Math.random() * 1.1}s`);
-      bit.style.fontSize = `${1.1 + Math.random() * 1.3}rem`;
-      layer.appendChild(bit);
-    }
-
-    festiveBar?.classList.add("is-bombing");
-    setTimeout(() => {
-      layer.remove();
-      festiveBar?.classList.remove("is-bombing");
-    }, reduced ? 1600 : 2800);
-  }
-
   const activeFestival = window.WFD_getActiveFestival
     ? window.WFD_getActiveFestival()
     : null;
-  const launchFestival = activeFestival || DEMO_FESTIVAL;
-  showFestiveBar({
-    ...launchFestival,
-    name: activeFestival ? activeFestival.name : "Festival mode · tap Demo",
-  });
-  // Once per page refresh (demo): emoji bomb from the status bar
-  requestAnimationFrame(() => fireEmojiBomb(launchFestival));
 
-  document.querySelectorAll("[data-festive-demo]").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      fireEmojiBomb({
-        ...launchFestival,
-        name: activeFestival ? activeFestival.name : "Demo festival blast",
-      });
-    });
-  });
+  if (festiveBar && activeFestival) {
+    festiveBar.hidden = false;
+    festiveBar.classList.add("is-visible");
+    document.body.classList.add("has-festive-bar");
+    if (festiveLabel) {
+      festiveLabel.textContent = `${activeFestival.emojis[0] || "🎉"} ${
+        activeFestival.name
+      }`;
+    }
+  }
 })();
