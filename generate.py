@@ -4,6 +4,10 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
 
+# Absolute base for canonical URLs, social images and the sitemap.
+# Change this when the site moves to its own domain.
+SITE_URL = "https://gaurav-lonkar.github.io/wingsfordreams"
+
 HEAD = """<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -11,26 +15,45 @@ HEAD = """<!DOCTYPE html>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>{title} | Wings For Dreams</title>
   <meta name="description" content="{description}" />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Amatic+SC:wght@700&family=Aoboshi+One&family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="canonical" href="__PAGE_URL__" />
+{robots}  <meta name="theme-color" content="#ae0d36" />
+  <link rel="icon" href="assets/favicon.ico" sizes="any" />
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/icon-32.png" />
+  <link rel="apple-touch-icon" href="assets/icon-180.png" />
+  <link rel="manifest" href="site.webmanifest" />
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="Wings For Dreams" />
+  <meta property="og:locale" content="en_IN" />
+  <meta property="og:title" content="{title} | Wings For Dreams" />
+  <meta property="og:description" content="{description}" />
+  <meta property="og:url" content="__PAGE_URL__" />
+  <meta property="og:image" content="{site_url}/assets/social-card.jpg" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="{title} | Wings For Dreams" />
+  <meta name="twitter:description" content="{description}" />
+  <meta name="twitter:image" content="{site_url}/assets/social-card.jpg" />
+  <link rel="stylesheet" href="css/fonts.css" />
   <link rel="stylesheet" href="css/tokens.css" />
   <link rel="stylesheet" href="css/base.css" />
   <link rel="stylesheet" href="css/components.css" />
   <link rel="stylesheet" href="css/pages.css" />
-  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.4/build/qrcode.min.js" defer></script>
+  <script src="js/vendor/qrcode.js" defer></script>
   <script src="js/upi-config.js" defer></script>
   <script src="js/employees.js" defer></script>
   <script src="js/festivals.js" defer></script>
   <script src="js/main.js" defer></script>
 </head>
-<body>
-  <div class="scroll-progress" aria-hidden="true"></div>
-  <div class="festive-bar" data-festive-bar hidden>
+<body{body_class}>
+{scroll_progress}  <div class="festive-bar" data-festive-bar hidden>
     <span data-festive-label>Happy festival</span>
   </div>
-  <a class="float-donate" href="{donate_href}" data-employee-link><span class="float-donate__pulse" aria-hidden="true"></span> Donate</a>
+  <a class="float-donate" href="{donate_href}" data-employee-link>{float_pulse}Donate</a>
 """
+
+SCROLL_PROGRESS = '  <div class="scroll-progress" aria-hidden="true"></div>\n'
+FLOAT_PULSE = '<span class="float-donate__pulse" aria-hidden="true"></span> '
 
 def header(active: str, donate_href: str = "donate.html") -> str:
     def act(name: str) -> str:
@@ -39,7 +62,7 @@ def header(active: str, donate_href: str = "donate.html") -> str:
     return f"""  <header class="site-header">
     <div class="container container--wide site-header__inner">
       <a class="brand" href="index.html" aria-label="Wings For Dreams home">
-        <img class="brand__logo" src="assets/logo.png" alt="" width="72" height="52" onerror="this.style.display='none'" />
+        <img class="brand__logo" src="assets/logo-240.png" alt="" width="72" height="52" onerror="this.style.display='none'" />
         <span class="brand__name">Wings For Dreams</span>
       </a>
       <div class="header-end">
@@ -117,7 +140,7 @@ FOOTER = """  <footer class="site-footer">
         </div>
       </div>
       <div class="footer-bottom">
-        <span>© Wings For Dreams · Prototype redesign</span>
+        <span>© Wings For Dreams</span>
         <span>
           <a href="https://www.facebook.com/wingsfordreamss/" rel="noopener">Facebook</a> ·
           <a href="https://www.instagram.com/wingsfordreamss" rel="noopener">Instagram</a> ·
@@ -144,10 +167,30 @@ def donate_url(cause: str | None = None, amount: int | None = None) -> str:
     return "donate.html?" + urlencode(q)
 
 
-def page(title, description, active, body, donate_cause=None):
+def page(
+    title,
+    description,
+    active,
+    body,
+    donate_cause=None,
+    no_motion=False,
+    noindex=False,
+):
+    """Build a page. `no_motion` opts out of animation, `noindex` out of search."""
     donate_href = donate_url(donate_cause)
     return (
-        HEAD.format(title=title, description=description, donate_href=donate_href)
+        HEAD.format(
+            title=title,
+            description=description,
+            donate_href=donate_href,
+            site_url=SITE_URL,
+            robots='  <meta name="robots" content="noindex, follow" />\n'
+            if noindex
+            else "",
+            body_class=' class="no-motion"' if no_motion else "",
+            scroll_progress="" if no_motion else SCROLL_PROGRESS,
+            float_pulse="" if no_motion else FLOAT_PULSE,
+        )
         + header(active, donate_href=donate_href)
         + body
         + FOOTER.format(donate_href=donate_href)
@@ -162,11 +205,11 @@ pages["index.html"] = page(
   <main>
     <section class="hero" data-hero-carousel data-interval="5500">
       <div class="hero__slides" aria-hidden="true">
-        <div class="hero__slide is-active" style="background-image:url('assets/photos/hero-community-1.jpeg')"></div>
-        <div class="hero__slide" style="background-image:url('assets/photos/hero-community-2.jpeg')"></div>
-        <div class="hero__slide" style="background-image:url('assets/photos/hero-community-3.jpeg')"></div>
-        <div class="hero__slide" style="background-image:url('assets/photos/child-class.jpeg')"></div>
-        <div class="hero__slide" style="background-image:url('assets/photos/women-hero.jpeg')"></div>
+        <div class="hero__slide is-active" style="background-image:url('assets/photos/hero-community-1.webp')"></div>
+        <div class="hero__slide" data-bg="assets/photos/hero-community-2.webp"></div>
+        <div class="hero__slide" data-bg="assets/photos/hero-community-3.webp"></div>
+        <div class="hero__slide" data-bg="assets/photos/child-class.webp"></div>
+        <div class="hero__slide" data-bg="assets/photos/women-hero.webp"></div>
       </div>
       <div class="container container--wide hero__content">
         <div class="hero__copy">
@@ -198,10 +241,10 @@ pages["index.html"] = page(
         <div class="split__media reveal">
           <div class="media-carousel" data-carousel data-interval="4500">
             <div class="media-carousel__slides">
-              <img src="assets/photos/hero-community-2.jpeg" alt="Wings For Dreams community gathering" loading="lazy" />
-              <img src="assets/photos/child-activity.jpeg" alt="" loading="lazy" />
-              <img src="assets/photos/dogs-feed.jpeg" alt="" loading="lazy" />
-              <img src="assets/photos/env-hero.jpg" alt="" loading="lazy" />
+              <img src="assets/photos/hero-community-2.webp" alt="Wings For Dreams community gathering" loading="lazy" />
+              <img src="assets/photos/child-activity.webp" alt="" loading="lazy" />
+              <img src="assets/photos/dogs-feed.webp" alt="" loading="lazy" />
+              <img src="assets/photos/env-hero.webp" alt="" loading="lazy" />
             </div>
             <div class="media-carousel__dots" data-carousel-dots></div>
           </div>
@@ -218,7 +261,7 @@ pages["index.html"] = page(
         </div>
         <div class="card-grid card-grid--4 reveal-stagger">
           <a class="cause-card reveal" href="women-empowerment.html">
-            <div class="cause-card__media"><img src="assets/photos/women-hero.jpeg" alt="" loading="lazy" /></div>
+            <div class="cause-card__media"><img src="assets/photos/women-hero.webp" alt="" loading="lazy" /></div>
             <div class="cause-card__body">
               <h3>Women Empowerment</h3>
               <p>Pads, livelihood, awareness, and self-defense for rural women and girls.</p>
@@ -226,7 +269,7 @@ pages["index.html"] = page(
             </div>
           </a>
           <a class="cause-card reveal" href="child-education.html">
-            <div class="cause-card__media"><img src="assets/photos/child-hero.jpeg" alt="" loading="lazy" /></div>
+            <div class="cause-card__media"><img src="assets/photos/child-hero.webp" alt="" loading="lazy" /></div>
             <div class="cause-card__body">
               <h3>Child Education</h3>
               <p>Happy Bachapan, school kits, and creative workshops that keep childhood bright.</p>
@@ -234,7 +277,7 @@ pages["index.html"] = page(
             </div>
           </a>
           <a class="cause-card reveal" href="dog-feeding.html">
-            <div class="cause-card__media"><img src="assets/photos/dogs-hero.jpeg" alt="" loading="lazy" /></div>
+            <div class="cause-card__media"><img src="assets/photos/dogs-hero.webp" alt="" loading="lazy" /></div>
             <div class="cause-card__body">
               <h3>Animal Care</h3>
               <p>Daily meals, rescue, and veterinary care for street dogs who need a friend.</p>
@@ -242,7 +285,7 @@ pages["index.html"] = page(
             </div>
           </a>
           <a class="cause-card reveal" href="environment.html">
-            <div class="cause-card__media"><img src="assets/photos/env-hero.jpg" alt="" loading="lazy" /></div>
+            <div class="cause-card__media"><img src="assets/photos/env-hero.webp" alt="" loading="lazy" /></div>
             <div class="cause-card__body">
               <h3>Environment</h3>
               <p>Trees and cloth bags—small green habits that cool our shared home.</p>
@@ -267,29 +310,29 @@ pages["index.html"] = page(
         </div>
         <div class="impact-spotlight reveal">
           <div class="impact-spotlight__content" data-impact-panels>
-            <div class="impact-panel is-active" data-panel="bachapan" data-visual="assets/photos/child-class.jpeg">
+            <div class="impact-panel is-active" data-panel="bachapan" data-visual="assets/photos/child-class.webp">
               <h3>Standing with migrant children</h3>
               <p>We met children on a construction site—hungry for food, language, and dignity. Happy Bachapan brings meals, festivals, and learning so childhood isn’t lost to migration.</p>
               <a class="btn btn--primary btn--sm" href="child-education.html">See the program</a>
             </div>
-            <div class="impact-panel" data-panel="women" data-visual="assets/photos/women-hero.jpeg">
+            <div class="impact-panel" data-panel="women" data-visual="assets/photos/women-hero.webp">
               <h3>Dignity starts with basics</h3>
               <p>Rural pads plants, free napkins, hygiene awareness, and free self-defense training—practical care that helps women and girls move through the world safer and stronger.</p>
               <a class="btn btn--primary btn--sm" href="women-empowerment.html">Meet the work</a>
             </div>
-            <div class="impact-panel" data-panel="trees" data-visual="assets/photos/env-hero.jpg">
+            <div class="impact-panel" data-panel="trees" data-visual="assets/photos/env-hero.webp">
               <h3>Mission 17,000 Trees</h3>
               <p>At Holkarwadi, volunteers planted nearly 17,000 trees across 5 acres—neem, tamarind, sacred fig, and more—turning CSR into living shade.</p>
               <a class="btn btn--primary btn--sm" href="csr.html">CSR partnerships</a>
             </div>
-            <div class="impact-panel" data-panel="dogs" data-visual="assets/photos/dogs-feed.jpeg">
+            <div class="impact-panel" data-panel="dogs" data-visual="assets/photos/dogs-feed.webp">
               <h3>Feed. Rescue. Heal.</h3>
               <p>Street dogs face hunger and injury daily. Together we’ve rescued 52+ dogs and keep meals and vet care moving through the community.</p>
               <a class="btn btn--primary btn--sm" href="dog-feeding.html">Help an animal</a>
             </div>
           </div>
           <div class="impact-spotlight__visual">
-            <img src="assets/photos/child-class.jpeg" alt="" data-impact-visual loading="lazy" />
+            <img src="assets/photos/child-class.webp" alt="" data-impact-visual loading="lazy" />
           </div>
         </div>
       </div>
@@ -377,7 +420,7 @@ pages["about.html"] = page(
     "about",
     """
   <main>
-    <section class="page-hero page-hero--photo" data-carousel-bg data-interval="5000" data-images="assets/photos/hero-community-3.jpeg,assets/photos/hero-community-1.jpeg,assets/photos/child-hero.jpeg,assets/photos/women-hero.jpeg">
+    <section class="page-hero page-hero--photo" data-carousel-bg data-interval="5000" data-images="assets/photos/hero-community-3.webp,assets/photos/hero-community-1.webp,assets/photos/child-hero.webp,assets/photos/women-hero.webp">
       <div class="container">
         <p class="eyebrow">About Us</p>
         <h1>A student-led nonprofit for dignity and care</h1>
@@ -392,7 +435,7 @@ pages["about.html"] = page(
           <p>Change begins with a single act of kindness. When we come together, small actions create a ripple that transforms communities.</p>
         </div>
         <div class="split__media reveal">
-          <img src="assets/photos/about-portrait.png" alt="Wings For Dreams" loading="lazy" />
+          <img src="assets/photos/about-portrait.webp" alt="Wings For Dreams" loading="lazy" />
         </div>
       </div>
     </section>
@@ -419,7 +462,7 @@ pages["impact.html"] = page(
     "impact",
     """
   <main>
-    <section class="page-hero page-hero--photo" data-carousel-bg data-interval="5000" data-images="assets/photos/hero-community-2.jpeg,assets/photos/env-hero.jpg,assets/photos/dogs-hero.jpeg,assets/photos/child-class.jpeg">
+    <section class="page-hero page-hero--photo" data-carousel-bg data-interval="5000" data-images="assets/photos/hero-community-2.webp,assets/photos/env-hero.webp,assets/photos/dogs-hero.webp,assets/photos/child-class.webp">
       <div class="container">
         <p class="eyebrow">Impact</p>
         <h1>Where your support becomes change</h1>
@@ -429,7 +472,7 @@ pages["impact.html"] = page(
     <section class="section">
       <div class="container card-grid card-grid--2 reveal-stagger">
         <a class="cause-card reveal" href="women-empowerment.html">
-          <div class="cause-card__media"><img src="assets/photos/women-hero.jpeg" alt="" loading="lazy" /></div>
+          <div class="cause-card__media"><img src="assets/photos/women-hero.webp" alt="" loading="lazy" /></div>
           <div class="cause-card__body">
             <h3>Women Empowerment</h3>
             <p>Sanitary pads plants, free napkins, awareness, and self-defense training.</p>
@@ -437,7 +480,7 @@ pages["impact.html"] = page(
           </div>
         </a>
         <a class="cause-card reveal" href="child-education.html">
-          <div class="cause-card__media"><img src="assets/photos/child-hero.jpeg" alt="" loading="lazy" /></div>
+          <div class="cause-card__media"><img src="assets/photos/child-hero.webp" alt="" loading="lazy" /></div>
           <div class="cause-card__body">
             <h3>Child Education</h3>
             <p>Happy Bachapan, educational kits, and extracurricular workshops in slums.</p>
@@ -445,7 +488,7 @@ pages["impact.html"] = page(
           </div>
         </a>
         <a class="cause-card reveal" href="environment.html">
-          <div class="cause-card__media"><img src="assets/photos/env-hero.jpg" alt="" loading="lazy" /></div>
+          <div class="cause-card__media"><img src="assets/photos/env-hero.webp" alt="" loading="lazy" /></div>
           <div class="cause-card__body">
             <h3>Environment</h3>
             <p>Tree plantation and cloth-bag distribution to reduce plastic waste.</p>
@@ -453,7 +496,7 @@ pages["impact.html"] = page(
           </div>
         </a>
         <a class="cause-card reveal" href="dog-feeding.html">
-          <div class="cause-card__media"><img src="assets/photos/dogs-hero.jpeg" alt="" loading="lazy" /></div>
+          <div class="cause-card__media"><img src="assets/photos/dogs-hero.webp" alt="" loading="lazy" /></div>
           <div class="cause-card__body">
             <h3>Dog Feeding &amp; Care</h3>
             <p>Meals, rescue (52+ dogs), and veterinary support for street animals.</p>
@@ -472,7 +515,7 @@ pages["women-empowerment.html"] = page(
     "impact",
     """
   <main>
-    <section class="page-hero page-hero--photo" data-carousel-bg data-interval="5000" data-images="assets/photos/women-hero.jpeg,assets/photos/women-art.png,assets/photos/cause-women.png,assets/photos/strip-1.png">
+    <section class="page-hero page-hero--photo" data-carousel-bg data-interval="5000" data-images="assets/photos/women-hero.webp,assets/photos/women-art.webp,assets/photos/cause-women.webp,assets/photos/strip-1.webp">
       <div class="container">
         <p class="eyebrow">Impact</p>
         <h1>Women Empowerment</h1>
@@ -484,9 +527,9 @@ pages["women-empowerment.html"] = page(
         <div class="split__media split__media--coral reveal">
           <div class="media-carousel" data-carousel data-interval="4200">
             <div class="media-carousel__slides">
-              <img src="assets/photos/women-art.png" alt="Women empowerment program" loading="lazy" />
-              <img src="assets/photos/women-art-2.png" alt="" loading="lazy" />
-              <img src="assets/photos/women-hero.jpeg" alt="" loading="lazy" />
+              <img src="assets/photos/women-art.webp" alt="Women empowerment program" loading="lazy" />
+              <img src="assets/photos/women-art-2.webp" alt="" loading="lazy" />
+              <img src="assets/photos/women-hero.webp" alt="" loading="lazy" />
             </div>
             <div class="media-carousel__dots" data-carousel-dots></div>
           </div>
@@ -508,9 +551,9 @@ pages["women-empowerment.html"] = page(
       </div>
       <div class="container">
         <div class="photo-grid reveal-stagger">
-          <div class="photo-grid__item"><img src="assets/photos/women-art-2.png" alt="" loading="lazy" /></div>
-          <div class="photo-grid__item"><img src="assets/photos/cause-women.png" alt="" loading="lazy" /></div>
-          <div class="photo-grid__item"><img src="assets/photos/strip-1.png" alt="" loading="lazy" /></div>
+          <div class="photo-grid__item"><img src="assets/photos/women-art-2.webp" alt="" loading="lazy" /></div>
+          <div class="photo-grid__item"><img src="assets/photos/cause-women.webp" alt="" loading="lazy" /></div>
+          <div class="photo-grid__item"><img src="assets/photos/strip-1.webp" alt="" loading="lazy" /></div>
         </div>
       </div>
     </section>
@@ -531,7 +574,7 @@ pages["child-education.html"] = page(
     "impact",
     """
   <main>
-    <section class="page-hero page-hero--photo" data-carousel-bg data-interval="5000" data-images="assets/photos/child-hero.jpeg,assets/photos/child-class.jpeg,assets/photos/child-kit.jpeg,assets/photos/child-activity.jpeg">
+    <section class="page-hero page-hero--photo" data-carousel-bg data-interval="5000" data-images="assets/photos/child-hero.webp,assets/photos/child-class.webp,assets/photos/child-kit.webp,assets/photos/child-activity.webp">
       <div class="container">
         <p class="eyebrow">Impact</p>
         <h1>Child Education</h1>
@@ -548,9 +591,9 @@ pages["child-education.html"] = page(
         <div class="split__media reveal">
           <div class="media-carousel" data-carousel data-interval="4200">
             <div class="media-carousel__slides">
-              <img src="assets/photos/child-class.jpeg" alt="Children in Happy Bachapan program" loading="lazy" />
-              <img src="assets/photos/child-kit.jpeg" alt="" loading="lazy" />
-              <img src="assets/photos/child-activity.jpeg" alt="" loading="lazy" />
+              <img src="assets/photos/child-class.webp" alt="Children in Happy Bachapan program" loading="lazy" />
+              <img src="assets/photos/child-kit.webp" alt="" loading="lazy" />
+              <img src="assets/photos/child-activity.webp" alt="" loading="lazy" />
             </div>
             <div class="media-carousel__dots" data-carousel-dots></div>
           </div>
@@ -565,9 +608,9 @@ pages["child-education.html"] = page(
       </div>
       <div class="container">
         <div class="photo-grid reveal-stagger">
-          <div class="photo-grid__item"><img src="assets/photos/child-kit.jpeg" alt="" loading="lazy" /></div>
-          <div class="photo-grid__item"><img src="assets/photos/child-activity.jpeg" alt="" loading="lazy" /></div>
-          <div class="photo-grid__item"><img src="assets/photos/cause-child.png" alt="" loading="lazy" /></div>
+          <div class="photo-grid__item"><img src="assets/photos/child-kit.webp" alt="" loading="lazy" /></div>
+          <div class="photo-grid__item"><img src="assets/photos/child-activity.webp" alt="" loading="lazy" /></div>
+          <div class="photo-grid__item"><img src="assets/photos/cause-child.webp" alt="" loading="lazy" /></div>
         </div>
         <div class="stack-sm reveal" style="margin-top:1.5rem">
           <a class="btn btn--primary" href="donate.html?cause=Child%20Education" data-employee-link>Donate for child education</a>
@@ -585,7 +628,7 @@ pages["environment.html"] = page(
     "impact",
     """
   <main>
-    <section class="page-hero page-hero--photo" data-carousel-bg data-interval="5000" data-images="assets/photos/env-hero.jpg,assets/photos/csr-1.jpg,assets/photos/csr-2.jpg,assets/photos/strip-4.png">
+    <section class="page-hero page-hero--photo" data-carousel-bg data-interval="5000" data-images="assets/photos/env-hero.webp,assets/photos/csr-1.webp,assets/photos/csr-2.webp,assets/photos/strip-4.webp">
       <div class="container">
         <p class="eyebrow">Impact</p>
         <h1>Environment</h1>
@@ -597,9 +640,9 @@ pages["environment.html"] = page(
         <div class="split__media split__media--green reveal">
           <div class="media-carousel" data-carousel data-interval="4200">
             <div class="media-carousel__slides">
-              <img src="assets/photos/env-hero.jpg" alt="Tree plantation drive" loading="lazy" />
-              <img src="assets/photos/csr-1.jpg" alt="" loading="lazy" />
-              <img src="assets/photos/csr-2.jpg" alt="" loading="lazy" />
+              <img src="assets/photos/env-hero.webp" alt="Tree plantation drive" loading="lazy" />
+              <img src="assets/photos/csr-1.webp" alt="" loading="lazy" />
+              <img src="assets/photos/csr-2.webp" alt="" loading="lazy" />
             </div>
             <div class="media-carousel__dots" data-carousel-dots></div>
           </div>
@@ -625,9 +668,9 @@ pages["environment.html"] = page(
         <div class="split__media split__media--green reveal">
           <div class="media-carousel" data-carousel data-interval="4200">
             <div class="media-carousel__slides">
-              <img src="assets/photos/csr-1.jpg" alt="Community environment activity" loading="lazy" />
-              <img src="assets/photos/env-hero.jpg" alt="" loading="lazy" />
-              <img src="assets/photos/strip-4.png" alt="" loading="lazy" />
+              <img src="assets/photos/csr-1.webp" alt="Community environment activity" loading="lazy" />
+              <img src="assets/photos/env-hero.webp" alt="" loading="lazy" />
+              <img src="assets/photos/strip-4.webp" alt="" loading="lazy" />
             </div>
             <div class="media-carousel__dots" data-carousel-dots></div>
           </div>
@@ -645,7 +688,7 @@ pages["dog-feeding.html"] = page(
     "impact",
     """
   <main>
-    <section class="page-hero page-hero--photo" data-carousel-bg data-interval="5000" data-images="assets/photos/dogs-hero.jpeg,assets/photos/dogs-feed.jpeg,assets/photos/dogs-photo.jpg,assets/photos/dogs-care.jpg">
+    <section class="page-hero page-hero--photo" data-carousel-bg data-interval="5000" data-images="assets/photos/dogs-hero.webp,assets/photos/dogs-feed.webp,assets/photos/dogs-photo.webp,assets/photos/dogs-care.webp">
       <div class="container">
         <p class="eyebrow">Animal care</p>
         <h1>Dog Feeding &amp; Rescue</h1>
@@ -659,9 +702,9 @@ pages["dog-feeding.html"] = page(
           <p>Street dogs face hunger, injury, and disease every day. Your support funds meals, veterinary care, and safe recovery.</p>
         </div>
         <div class="photo-grid reveal-stagger">
-          <div class="photo-grid__item photo-grid__item--tall"><img src="assets/photos/dogs-feed.jpeg" alt="Feeding street dogs" loading="lazy" /></div>
-          <div class="photo-grid__item photo-grid__item--tall"><img src="assets/photos/dogs-photo.jpg" alt="Dog care activity" loading="lazy" /></div>
-          <div class="photo-grid__item photo-grid__item--tall"><img src="assets/photos/dogs-care.jpg" alt="Rescued dog" loading="lazy" /></div>
+          <div class="photo-grid__item photo-grid__item--tall"><img src="assets/photos/dogs-feed.webp" alt="Feeding street dogs" loading="lazy" /></div>
+          <div class="photo-grid__item photo-grid__item--tall"><img src="assets/photos/dogs-photo.webp" alt="Dog care activity" loading="lazy" /></div>
+          <div class="photo-grid__item photo-grid__item--tall"><img src="assets/photos/dogs-care.webp" alt="Rescued dog" loading="lazy" /></div>
         </div>
         <div class="card-grid card-grid--3 reveal-stagger">
           <div class="program-item reveal"><h3>Feeding</h3><p>Daily meals reduce hunger-driven aggression and give street dogs a chance at healthier lives.</p></div>
@@ -684,7 +727,7 @@ pages["csr.html"] = page(
     "csr",
     """
   <main>
-    <section class="page-hero page-hero--photo" data-carousel-bg data-interval="5000" data-images="assets/photos/csr-1.jpg,assets/photos/csr-2.jpg,assets/photos/env-hero.jpg,assets/photos/hero-community-2.jpeg">
+    <section class="page-hero page-hero--photo" data-carousel-bg data-interval="5000" data-images="assets/photos/csr-1.webp,assets/photos/csr-2.webp,assets/photos/env-hero.webp,assets/photos/hero-community-2.webp">
       <div class="container">
         <p class="eyebrow">CSR</p>
         <h1>Corporate Social Responsibility</h1>
@@ -712,9 +755,9 @@ pages["csr.html"] = page(
         <div class="split__media split__media--green reveal">
           <div class="media-carousel" data-carousel data-interval="4200">
             <div class="media-carousel__slides">
-              <img src="assets/photos/csr-2.jpg" alt="Mission 17,000 Trees CSR plantation" loading="lazy" />
-              <img src="assets/photos/csr-1.jpg" alt="" loading="lazy" />
-              <img src="assets/photos/env-hero.jpg" alt="" loading="lazy" />
+              <img src="assets/photos/csr-2.webp" alt="Mission 17,000 Trees CSR plantation" loading="lazy" />
+              <img src="assets/photos/csr-1.webp" alt="" loading="lazy" />
+              <img src="assets/photos/env-hero.webp" alt="" loading="lazy" />
             </div>
             <div class="media-carousel__dots" data-carousel-dots></div>
           </div>
@@ -722,9 +765,9 @@ pages["csr.html"] = page(
       </div>
       <div class="container">
         <div class="photo-grid reveal-stagger">
-          <div class="photo-grid__item"><img src="assets/photos/env-hero.jpg" alt="" loading="lazy" /></div>
-          <div class="photo-grid__item"><img src="assets/photos/csr-1.jpg" alt="" loading="lazy" /></div>
-          <div class="photo-grid__item"><img src="assets/photos/strip-4.png" alt="" loading="lazy" /></div>
+          <div class="photo-grid__item"><img src="assets/photos/env-hero.webp" alt="" loading="lazy" /></div>
+          <div class="photo-grid__item"><img src="assets/photos/csr-1.webp" alt="" loading="lazy" /></div>
+          <div class="photo-grid__item"><img src="assets/photos/strip-4.webp" alt="" loading="lazy" /></div>
         </div>
       </div>
     </section>
@@ -798,11 +841,11 @@ DONATE_BODY = """
             </div>
             <label class="form-field">
               <span class="form-field__label">Email Address <span class="req" aria-hidden="true">*</span><span class="sr-only">required</span></span>
-              <input type="email" name="give_email" autocomplete="email" placeholder="Email Address" data-donor-email maxlength="150" required />
+              <input type="email" name="give_email" autocomplete="email" placeholder="Email Address" data-donor-email maxlength="254" required />
             </label>
             <label class="form-field">
               <span class="form-field__label">Phone</span>
-              <input type="tel" name="phone" placeholder="Phone" data-donor-phone inputmode="numeric" maxlength="10" />
+              <input type="tel" name="phone" placeholder="Phone" data-donor-phone autocomplete="tel" inputmode="tel" maxlength="18" />
             </label>
             <label class="form-field">
               <span class="form-field__label">Cause <span class="req" aria-hidden="true">*</span><span class="sr-only">required</span></span>
@@ -816,11 +859,11 @@ DONATE_BODY = """
             </label>
             <label class="form-field">
               <span class="form-field__label">PAN No.</span>
-              <input type="text" name="pan_no" placeholder="PAN No." data-donor-pan maxlength="10" />
+              <input type="text" name="pan_no" placeholder="PAN No." data-donor-pan autocapitalize="characters" spellcheck="false" maxlength="10" />
             </label>
             <label class="form-field">
               <span class="form-field__label">Aadhar</span>
-              <input type="text" name="aadhar" placeholder="Aadhar" data-donor-aadhar inputmode="numeric" maxlength="12" />
+              <input type="text" name="aadhar" placeholder="Aadhar" data-donor-aadhar inputmode="numeric" maxlength="14" />
             </label>
             <label class="form-field">
               <span class="form-field__label">City</span>
@@ -855,7 +898,7 @@ DONATE_BODY = """
               <p class="upi-result__amount" data-upi-amount-label>₹1</p>
               <p class="upi-result__meta" data-upi-cause-label>Donation</p>
               <div class="upi-result__qrwrap">
-                <div class="upi-result__qr" data-upi-qr aria-label="UPI payment QR code"></div>
+                <div class="upi-result__qr" data-upi-qr></div>
                 <span class="upi-result__lockbadge" aria-hidden="true">Locked</span>
               </div>
               <p class="upi-result__lock" data-upi-lock role="status" hidden></p>
@@ -874,7 +917,7 @@ DONATE_BODY = """
               <strong class="give-total__value" data-donate-total>₹1</strong>
             </p>
             <button type="submit" class="btn btn--primary btn--pay give-submit" data-donate-submit>Donate Now</button>
-            <p class="note" data-form-note></p>
+            <p class="note" data-form-note role="status" aria-live="polite"></p>
           </section>
 
           <div class="payment-success" data-payment-success hidden>
@@ -931,6 +974,7 @@ for person in FUNDRAISERS:
         f"Donate to Wings For Dreams through {person} \u2014 scan the UPI QR code to pay.",
         "donate",
         donate_body(person),
+        noindex=True,
     ).replace(
         '<meta name="viewport" content="width=device-width, initial-scale=1" />',
         '<meta name="viewport" content="width=device-width, initial-scale=1" />\n'
@@ -944,7 +988,7 @@ pages["school-kit.html"] = page(
     "school",
     """
   <main>
-    <section class="page-hero page-hero--photo" data-carousel-bg data-interval="5000" data-images="assets/photos/child-kit.jpeg,assets/photos/child-activity.jpeg,assets/photos/child-class.jpeg,assets/photos/child-hero.jpeg">
+    <section class="page-hero page-hero--photo" data-carousel-bg data-interval="5000" data-images="assets/photos/child-kit.webp,assets/photos/child-activity.webp,assets/photos/child-class.webp,assets/photos/child-hero.webp">
       <div class="container">
         <p class="eyebrow">One Kit, One Smile</p>
         <h1>Donate school kits today</h1>
@@ -962,10 +1006,10 @@ pages["school-kit.html"] = page(
         <div class="photo-frame reveal" style="min-height:260px;margin-bottom:1.75rem">
           <div class="media-carousel" data-carousel data-interval="4000">
             <div class="media-carousel__slides">
-              <img src="assets/photos/child-activity.jpeg" alt="Children receiving school support" loading="lazy" />
-              <img src="assets/photos/child-kit.jpeg" alt="" loading="lazy" />
-              <img src="assets/photos/child-class.jpeg" alt="" loading="lazy" />
-              <img src="assets/photos/child-hero.jpeg" alt="" loading="lazy" />
+              <img src="assets/photos/child-activity.webp" alt="Children receiving school support" loading="lazy" />
+              <img src="assets/photos/child-kit.webp" alt="" loading="lazy" />
+              <img src="assets/photos/child-class.webp" alt="" loading="lazy" />
+              <img src="assets/photos/child-hero.webp" alt="" loading="lazy" />
             </div>
             <div class="media-carousel__dots" data-carousel-dots></div>
           </div>
@@ -1044,7 +1088,7 @@ pages["banks.html"] = page(
     </section>
     <section class="section">
       <div class="container card-grid card-grid--2">
-        <div class="bank-card reveal">
+        <div class="bank-card">
           <h3>ICICI Bank</h3>
           <dl>
             <div><dt>Account name</dt><dd>WINGS FOR DREAMS</dd></div>
@@ -1053,7 +1097,7 @@ pages["banks.html"] = page(
             <div><dt>Branch</dt><dd>Bund Garden</dd></div>
           </dl>
         </div>
-        <div class="bank-card reveal">
+        <div class="bank-card">
           <h3>HDFC Bank</h3>
           <dl>
             <div><dt>Account name</dt><dd>WINGS FOR DREAMS</dd></div>
@@ -1069,6 +1113,7 @@ pages["banks.html"] = page(
     </section>
   </main>
 """,
+    no_motion=True,
 )
 
 pages["login.html"] = page(
@@ -1203,10 +1248,105 @@ pages["career.html"] = page(
 """,
 )
 
+# Staff-only screens. The fundraiser clones already pass noindex=True.
+NOINDEX_PAGES = {"admin.html", "login.html"}
+
+HERO_PRELOAD = (
+    '  <link rel="preload" as="image" href="assets/photos/hero-community-1.webp"'
+    ' fetchpriority="high" />\n'
+)
+
+ORG_JSONLD = """  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "NGO",
+    "name": "Wings For Dreams",
+    "url": "%(site)s/",
+    "logo": "%(site)s/assets/icon-512.png",
+    "image": "%(site)s/assets/social-card.jpg",
+    "description": "Pune-based nonprofit working on child education, women's empowerment, animal care and the environment.",
+    "foundingDate": "2019-03-29",
+    "email": "info@wingsfordreams.org",
+    "telephone": "+91-8698-637796",
+    "taxID": "AAATW5579L",
+    "address": {
+      "@type": "PostalAddress",
+      "streetAddress": "Ashoka Mall, G4, Bund Garden Rd",
+      "addressLocality": "Pune",
+      "addressRegion": "Maharashtra",
+      "addressCountry": "IN"
+    },
+    "sameAs": [
+      "https://www.facebook.com/wingsfordreamss/",
+      "https://www.instagram.com/wingsfordreamss",
+      "https://www.youtube.com/@wingsfordreamss"
+    ]
+  }
+  </script>
+""" % {"site": SITE_URL}
+
+
+def canonical_for(name: str) -> str:
+    """Absolute URL for a generated file, with directory indexes collapsed."""
+    if name == "index.html":
+        return f"{SITE_URL}/"
+    if name.endswith("/index.html"):
+        return f"{SITE_URL}/{name[: -len('index.html')]}"
+    return f"{SITE_URL}/{name}"
+
+
+indexable = []
+
 for name, html in pages.items():
+    html = html.replace("__PAGE_URL__", canonical_for(name))
+    if name in NOINDEX_PAGES and 'name="robots"' not in html:
+        html = html.replace(
+            '<link rel="canonical"',
+            '<meta name="robots" content="noindex, follow" />\n  <link rel="canonical"',
+            1,
+        )
+    if name == "index.html":
+        # The first hero slide is the largest paint on the home page.
+        html = html.replace("</head>", f"{HERO_PRELOAD}{ORG_JSONLD}</head>", 1)
+    if 'name="robots"' not in html:
+        indexable.append(name)
     target = ROOT / name
     target.parent.mkdir(parents=True, exist_ok=True)
     target.write_text(html, encoding="utf-8")
     print("wrote", name)
 
-print("done", len(pages), "pages")
+MANIFEST = """{
+  "name": "Wings For Dreams",
+  "short_name": "Wings",
+  "description": "Donate to Wings For Dreams — child education, women's empowerment, animal care and the environment in Pune.",
+  "start_url": "./index.html",
+  "display": "browser",
+  "background_color": "#ffffff",
+  "theme_color": "#ae0d36",
+  "icons": [
+    { "src": "assets/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "assets/icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}
+"""
+(ROOT / "site.webmanifest").write_text(MANIFEST, encoding="utf-8")
+
+# Note: on a github.io project site only the domain-root robots.txt is honoured;
+# this file becomes authoritative once the site runs on its own domain.
+(ROOT / "robots.txt").write_text(
+    "User-agent: *\nAllow: /\nDisallow: /admin.html\nDisallow: /login.html\n"
+    f"\nSitemap: {SITE_URL}/sitemap.xml\n",
+    encoding="utf-8",
+)
+
+urls = "\n".join(
+    f"  <url><loc>{canonical_for(name)}</loc></url>" for name in sorted(indexable)
+)
+(ROOT / "sitemap.xml").write_text(
+    '<?xml version="1.0" encoding="UTF-8"?>\n'
+    '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
+    f"{urls}\n</urlset>\n",
+    encoding="utf-8",
+)
+
+print("done", len(pages), "pages,", len(indexable), "in sitemap")

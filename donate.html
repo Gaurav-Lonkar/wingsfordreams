@@ -5,14 +5,31 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Donate | Wings For Dreams</title>
   <meta name="description" content="Donate to Wings For Dreams — enter the donation details and scan the auto-generated UPI QR code to pay." />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Amatic+SC:wght@700&family=Aoboshi+One&family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="canonical" href="https://gaurav-lonkar.github.io/wingsfordreams/donate.html" />
+  <meta name="theme-color" content="#ae0d36" />
+  <link rel="icon" href="assets/favicon.ico" sizes="any" />
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/icon-32.png" />
+  <link rel="apple-touch-icon" href="assets/icon-180.png" />
+  <link rel="manifest" href="site.webmanifest" />
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="Wings For Dreams" />
+  <meta property="og:locale" content="en_IN" />
+  <meta property="og:title" content="Donate | Wings For Dreams" />
+  <meta property="og:description" content="Donate to Wings For Dreams — enter the donation details and scan the auto-generated UPI QR code to pay." />
+  <meta property="og:url" content="https://gaurav-lonkar.github.io/wingsfordreams/donate.html" />
+  <meta property="og:image" content="https://gaurav-lonkar.github.io/wingsfordreams/assets/social-card.jpg" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Donate | Wings For Dreams" />
+  <meta name="twitter:description" content="Donate to Wings For Dreams — enter the donation details and scan the auto-generated UPI QR code to pay." />
+  <meta name="twitter:image" content="https://gaurav-lonkar.github.io/wingsfordreams/assets/social-card.jpg" />
+  <link rel="stylesheet" href="css/fonts.css" />
   <link rel="stylesheet" href="css/tokens.css" />
   <link rel="stylesheet" href="css/base.css" />
   <link rel="stylesheet" href="css/components.css" />
   <link rel="stylesheet" href="css/pages.css" />
-  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.4/build/qrcode.min.js" defer></script>
+  <script src="js/vendor/qrcode.js" defer></script>
   <script src="js/upi-config.js" defer></script>
   <script src="js/employees.js" defer></script>
   <script src="js/festivals.js" defer></script>
@@ -27,7 +44,7 @@
   <header class="site-header">
     <div class="container container--wide site-header__inner">
       <a class="brand" href="index.html" aria-label="Wings For Dreams home">
-        <img class="brand__logo" src="assets/logo.png" alt="" width="72" height="52" onerror="this.style.display='none'" />
+        <img class="brand__logo" src="assets/logo-240.png" alt="" width="72" height="52" onerror="this.style.display='none'" />
         <span class="brand__name">Wings For Dreams</span>
       </a>
       <div class="header-end">
@@ -127,11 +144,11 @@
             </div>
             <label class="form-field">
               <span class="form-field__label">Email Address <span class="req" aria-hidden="true">*</span><span class="sr-only">required</span></span>
-              <input type="email" name="give_email" autocomplete="email" placeholder="Email Address" data-donor-email maxlength="150" required />
+              <input type="email" name="give_email" autocomplete="email" placeholder="Email Address" data-donor-email maxlength="254" required />
             </label>
             <label class="form-field">
               <span class="form-field__label">Phone</span>
-              <input type="tel" name="phone" placeholder="Phone" data-donor-phone inputmode="numeric" maxlength="10" />
+              <input type="tel" name="phone" placeholder="Phone" data-donor-phone autocomplete="tel" inputmode="tel" maxlength="18" />
             </label>
             <label class="form-field">
               <span class="form-field__label">Cause <span class="req" aria-hidden="true">*</span><span class="sr-only">required</span></span>
@@ -145,11 +162,11 @@
             </label>
             <label class="form-field">
               <span class="form-field__label">PAN No.</span>
-              <input type="text" name="pan_no" placeholder="PAN No." data-donor-pan maxlength="10" />
+              <input type="text" name="pan_no" placeholder="PAN No." data-donor-pan autocapitalize="characters" spellcheck="false" maxlength="10" />
             </label>
             <label class="form-field">
               <span class="form-field__label">Aadhar</span>
-              <input type="text" name="aadhar" placeholder="Aadhar" data-donor-aadhar inputmode="numeric" maxlength="12" />
+              <input type="text" name="aadhar" placeholder="Aadhar" data-donor-aadhar inputmode="numeric" maxlength="14" />
             </label>
             <label class="form-field">
               <span class="form-field__label">City</span>
@@ -184,7 +201,7 @@
               <p class="upi-result__amount" data-upi-amount-label>₹1</p>
               <p class="upi-result__meta" data-upi-cause-label>Donation</p>
               <div class="upi-result__qrwrap">
-                <div class="upi-result__qr" data-upi-qr aria-label="UPI payment QR code"></div>
+                <div class="upi-result__qr" data-upi-qr></div>
                 <span class="upi-result__lockbadge" aria-hidden="true">Locked</span>
               </div>
               <p class="upi-result__lock" data-upi-lock role="status" hidden></p>
@@ -203,7 +220,7 @@
               <strong class="give-total__value" data-donate-total>₹1</strong>
             </p>
             <button type="submit" class="btn btn--primary btn--pay give-submit" data-donate-submit>Donate Now</button>
-            <p class="note" data-form-note></p>
+            <p class="note" data-form-note role="status" aria-live="polite"></p>
           </section>
 
           <div class="payment-success" data-payment-success hidden>
@@ -266,7 +283,7 @@
         </div>
       </div>
       <div class="footer-bottom">
-        <span>© Wings For Dreams · Prototype redesign</span>
+        <span>© Wings For Dreams</span>
         <span>
           <a href="https://www.facebook.com/wingsfordreamss/" rel="noopener">Facebook</a> ·
           <a href="https://www.instagram.com/wingsfordreamss" rel="noopener">Instagram</a> ·

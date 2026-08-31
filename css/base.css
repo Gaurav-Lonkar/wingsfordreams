@@ -237,3 +237,27 @@ body.has-festive-bar .site-header {
     animation: none;
   }
 }
+
+/* Pages built with no_motion=True in generate.py: nothing moves, regardless of
+   the visitor's motion preference. */
+html:has(body.no-motion) {
+  scroll-behavior: auto;
+}
+
+body.no-motion *,
+body.no-motion *::before,
+body.no-motion *::after {
+  animation: none !important;
+  transition: none !important;
+}
+
+body.no-motion .reveal,
+body.no-motion .float-donate {
+  opacity: 1 !important;
+  transform: none !important;
+}
+
+/* Shown from the start instead of sliding in on scroll. */
+body.no-motion .float-donate {
+  pointer-events: auto;
+}

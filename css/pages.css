@@ -683,7 +683,7 @@
 .give-amount-min {
   margin: 0;
   font-size: 0.82rem;
-  color: #888;
+  color: var(--wfd-muted-text);
 }
 
 .form-field {
@@ -704,10 +704,29 @@
 }
 
 .form-field.has-error input,
-.form-field.has-error select {
+.form-field.has-error select,
+.amount-field.has-error {
   border-color: var(--wfd-primary);
   background: #fffafb;
   box-shadow: 0 0 0 3px rgba(174, 13, 54, 0.1);
+}
+
+/* Inline message created by the validator and linked via aria-describedby. */
+.form-field__error {
+  display: none;
+  font-size: 0.78rem;
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--wfd-primary);
+}
+
+.form-field.has-error .form-field__error,
+.amount-field.has-error + .form-field__error {
+  display: block;
+}
+
+.amount-field.has-error + .form-field__error {
+  margin-top: 0.4rem;
 }
 
 .give-section--total {
@@ -981,9 +1000,17 @@
   font-size: 1.05rem;
 }
 
+.upi-result__qrfail {
+  margin: 0;
+  padding: 1rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--wfd-primary);
+}
+
 .upi-hint {
   font-size: 0.8rem;
-  color: #888;
+  color: var(--wfd-muted-text);
   margin: 0.9rem 0 0;
   line-height: 1.45;
   max-width: 32ch;
@@ -1189,8 +1216,12 @@ body:has(.donate-main) .float-donate {
 
 .note {
   font-size: 0.84rem;
-  color: #888;
+  color: var(--wfd-muted-text);
   margin: 0;
+}
+
+.note a {
+  text-decoration: underline;
 }
 
 .impact-spotlight {

@@ -267,18 +267,59 @@
     return fieldValue("[data-payment-type]");
   }
 
-  /** Each payment type carries a different reference number. */
-  const PAYMENT_ID_LABELS = {
-    UPI: ["Payment Id (UPI UTR)", "12-digit UTR from your UPI app"],
-    Swipe: ["Payment Id (Approval Code)", "Card approval / RRN code"],
-    Cash: ["Payment Id (Receipt No.)", "Cash receipt number"],
-    "NEFT/RTGS": ["Payment Id (Bank UTR)", "UTR from the bank transfer"],
-    Cheque: ["Payment Id (Cheque No.)", "Cheque number"],
+  /**
+   * Each payment type carries a different reference number, so the Payment Id
+   * field renames itself and checks the shape that type actually produces.
+   * Lengths follow NPCI (12-digit UPI UTR/RRN) and RBI transfer references;
+   * looser types only get a minimum length so a genuine gift is never blocked.
+   */
+  const PAYMENT_ID_RULES = {
+    UPI: {
+      label: "Payment Id (UPI UTR)",
+      placeholder: "12-digit UTR from your UPI app",
+      test: (v) => /^\d{12}$/.test(v),
+      error: "A UPI UTR is exactly 12 digits — copy it from your UPI app.",
+    },
+    Swipe: {
+      label: "Payment Id (Approval Code)",
+      placeholder: "Card approval / RRN code",
+      test: (v) => /^[A-Za-z0-9]{6,12}$/.test(v),
+      error: "Enter the 6–12 character approval or RRN code from the receipt.",
+    },
+    Cash: {
+      label: "Payment Id (Receipt No.)",
+      placeholder: "Cash receipt number",
+      test: (v) => v.length >= 3,
+      error: "Enter the cash receipt number.",
+    },
+    "NEFT/RTGS": {
+      label: "Payment Id (Bank UTR)",
+      placeholder: "16–22 character UTR from the bank",
+      test: (v) => /^[A-Za-z0-9]{16,22}$/.test(v),
+      error:
+        "A bank UTR is 16–22 letters and digits — copy it from the transfer confirmation.",
+    },
+    Cheque: {
+      label: "Payment Id (Cheque No.)",
+      placeholder: "6-digit cheque number",
+      test: (v) => /^\d{6}$/.test(v),
+      error: "A cheque number is 6 digits.",
+    },
   };
 
+  const PAYMENT_ID_FALLBACK = {
+    label: "Payment Id",
+    placeholder: "Payment Id",
+    test: (v) => v.length >= 3,
+    error: "Enter the payment reference for this donation.",
+  };
+
+  function paymentIdRule() {
+    return PAYMENT_ID_RULES[getPaymentType()] || PAYMENT_ID_FALLBACK;
+  }
+
   function syncPaymentIdLabel() {
-    const [label, placeholder] =
-      PAYMENT_ID_LABELS[getPaymentType()] || ["Payment Id", "Payment Id"];
+    const { label, placeholder } = paymentIdRule();
     const labelEl = document.querySelector("[data-payment-id-label]");
     if (labelEl) labelEl.textContent = label;
     const input = document.querySelector("[data-payment-id]");
@@ -679,6 +720,63 @@
     return digits ? Number(digits) : 0;
   }
 
+  const AMOUNT_MIN = 1;
+  const AMOUNT_MAX = 500000;
+
+  /**
+   * What may sit in the amount box while typing: digits, optional grouping
+   * commas and at most one decimal point. Keeping the point (instead of
+   * stripping it) is what stops "10.50" from silently becoming ₹1,050.
+   */
+  function sanitizeAmountInput(value) {
+    const cleaned = String(value || "").replace(/[^\d.,]/g, "");
+    const firstDot = cleaned.indexOf(".");
+    if (firstDot === -1) return cleaned.slice(0, 15);
+    const head = cleaned.slice(0, firstDot + 1);
+    const tail = cleaned.slice(firstDot + 1).replace(/[.,]/g, "");
+    return (head + tail).slice(0, 15);
+  }
+
+  /** Validated rupee amount: { ok, value, message }. */
+  function readAmount() {
+    const raw = (
+      customAmount?.value ??
+      document.querySelector("[data-custom-amount]")?.value ??
+      ""
+    )
+      .toString()
+      .trim()
+      .replace(/[₹\s,]/g, "");
+
+    if (!raw) {
+      const chip = document.querySelector(".amount-option.is-selected");
+      const chipAmount = Number(chip?.dataset.amount || 0);
+      if (chipAmount > 0) return { ok: true, value: chipAmount, message: "" };
+      return { ok: false, value: 0, message: "Enter the donation amount." };
+    }
+    if (!/^\d+$/.test(raw)) {
+      return {
+        ok: false,
+        value: 0,
+        message: "Enter a whole rupee amount — paise aren’t accepted.",
+      };
+    }
+    const value = Number(raw);
+    if (value < AMOUNT_MIN) {
+      return { ok: false, value, message: `The minimum donation is ₹${AMOUNT_MIN}.` };
+    }
+    if (value > AMOUNT_MAX) {
+      return {
+        ok: false,
+        value,
+        message: `For gifts above ₹${AMOUNT_MAX.toLocaleString(
+          "en-IN"
+        )} please email info@wingsfordreams.org so we can help directly.`,
+      };
+    }
+    return { ok: true, value, message: "" };
+  }
+
   function formatAmountDisplay(n) {
     if (!n || Number.isNaN(n)) return "";
     return Math.round(n).toLocaleString("en-IN");
@@ -733,34 +831,37 @@
 
   if (customAmount) {
     customAmount.addEventListener("input", () => {
-      const amount = parseAmountDigits(customAmount.value);
-      const caretEnd = customAmount.selectionStart === customAmount.value.length;
-      customAmount.value = amount ? formatAmountDisplay(amount) : "";
-      customAmount.dataset.raw = amount ? String(amount) : "";
-      if (caretEnd) {
-        const len = customAmount.value.length;
-        customAmount.setSelectionRange(len, len);
+      const cleaned = sanitizeAmountInput(customAmount.value);
+      if (cleaned !== customAmount.value) {
+        const caretEnd =
+          customAmount.selectionStart === customAmount.value.length;
+        customAmount.value = cleaned;
+        if (caretEnd) customAmount.setSelectionRange(cleaned.length, cleaned.length);
       }
-      syncAmountChips(amount);
+      const amount = readAmount();
+      customAmount.dataset.raw = amount.ok ? String(amount.value) : "";
+      syncAmountChips(amount.ok ? amount.value : 0);
       updateDonateSummary();
       resetPaymentDoneButton();
       scheduleUpiRefresh();
     });
     customAmount.addEventListener("blur", () => {
-      const amount = parseAmountDigits(customAmount.value);
-      customAmount.value = amount ? formatAmountDisplay(amount) : "";
-      customAmount.dataset.raw = amount ? String(amount) : "";
-      syncAmountChips(amount);
+      const amount = readAmount();
+      // Only tidy the display once the entry is a valid amount, so a rejected
+      // one stays on screen beside its error message.
+      if (amount.ok && customAmount.value.trim()) {
+        customAmount.value = formatAmountDisplay(amount.value);
+        customAmount.dataset.raw = String(amount.value);
+      }
+      syncAmountChips(amount.ok ? amount.value : 0);
       updateDonateSummary();
       scheduleUpiRefresh();
     });
   }
 
   function getDonateAmount() {
-    const fromField = parseAmountDigits(
-      customAmount?.value || customAmount?.dataset.raw || ""
-    );
-    if (fromField > 0) return String(fromField);
+    const amount = readAmount();
+    if (amount.ok) return String(amount.value);
     const selected = document.querySelector(".amount-option.is-selected");
     return selected?.dataset.amount || "1";
   }
@@ -1231,18 +1332,18 @@
         margin: 1,
         color: { dark: "#161616", light: "#ffffff" },
       });
+      canvas.setAttribute("role", "img");
       canvas.setAttribute("aria-label", label);
       mount.appendChild(canvas);
       return;
     }
-    const img = document.createElement("img");
-    img.alt = label;
-    img.width = 196;
-    img.height = 196;
-    img.src = `https://api.qrserver.com/v1/create-qr-code/?size=196x196&data=${encodeURIComponent(
-      upiUri
-    )}`;
-    mount.appendChild(img);
+    // No remote fallback on purpose: the UPI string carries the payee and
+    // amount, so it must not be handed to a third-party image service.
+    const fallback = document.createElement("p");
+    fallback.className = "upi-result__qrfail";
+    fallback.textContent =
+      "QR code unavailable — use the Pay with UPI button or the UPI ID below.";
+    mount.appendChild(fallback);
   }
 
   let scrambleSeed = "";
@@ -1271,18 +1372,16 @@
         margin: 1,
         color: { dark: "#161616", light: "#ffffff" },
       });
+      canvas.setAttribute("role", "img");
       canvas.setAttribute("aria-label", "WhatsApp QR code");
       mount.appendChild(canvas);
       return;
     }
-    const img = document.createElement("img");
-    img.alt = "WhatsApp QR code";
-    img.width = size;
-    img.height = size;
-    img.src = `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&data=${encodeURIComponent(
-      waUrl
-    )}`;
-    mount.appendChild(img);
+    // No remote fallback on purpose: the share link carries donation details.
+    const fallback = document.createElement("p");
+    fallback.className = "upi-result__qrfail";
+    fallback.textContent = "QR code unavailable — use the WhatsApp link instead.";
+    mount.appendChild(fallback);
   }
 
   let upiRefreshTimer = null;
@@ -1308,24 +1407,292 @@
     }
   }
 
-  function clearFieldErrors() {
-    document
-      .querySelectorAll(".form-field.has-error")
-      .forEach((el) => el.classList.remove("has-error"));
+  /* ---------------------------------------------------------------------- *
+   * Donation form validation
+   *
+   * Email follows the dot-atom form of RFC 5322 §3.2.3 plus the length limits
+   * of RFC 5321 §4.5.3.1. Quoted local parts ("a b"@x.com) and address
+   * literals (a@[192.0.2.1]) are legal but deliberately rejected: no donor
+   * types them and neither survives the receipt pipeline.
+   * ---------------------------------------------------------------------- */
+
+  const EMAIL_ATOM = "[A-Za-z0-9!#$%&'*+\\-/=?^_`{|}~]+";
+  const EMAIL_LOCAL_RE = new RegExp(`^${EMAIL_ATOM}(?:\\.${EMAIL_ATOM})*$`);
+  // RFC 1035 / RFC 5890 label: alphanumeric ends, hyphens only inside, ≤63 chars
+  const DNS_LABEL_RE = /^[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?$/;
+
+  function isValidEmail(value) {
+    if (!value || value.length > 254) return false;
+    const at = value.lastIndexOf("@");
+    if (at < 1 || at === value.length - 1) return false;
+    const local = value.slice(0, at);
+    const domain = value.slice(at + 1);
+    if (local.length > 64 || !EMAIL_LOCAL_RE.test(local)) return false;
+    if (domain.length > 253) return false;
+    const labels = domain.split(".");
+    if (labels.length < 2) return false;
+    if (!labels.every((label) => DNS_LABEL_RE.test(label))) return false;
+    return /^[A-Za-z]{2,63}$/.test(labels[labels.length - 1]);
   }
 
-  /** Flag a required field, focus it, and explain in the shared note line. */
-  function failValidation(selector, message) {
-    const noteEl = document.querySelector("[data-form-note]");
-    const field = selector ? document.querySelector(selector) : null;
-    field?.closest(".form-field")?.classList.add("has-error");
-    if (noteEl) {
-      noteEl.textContent = message;
-      noteEl.style.color = "var(--wfd-primary)";
+  /**
+   * Phone in E.164 form (`+<country><number>`, ≤15 digits) as used by RFC 3966
+   * tel URIs. A bare 10-digit entry is treated as Indian and must start 6–9 per
+   * the TRAI mobile numbering plan.
+   */
+  function normalizePhone(value) {
+    const raw = String(value || "").replace(/[\s()\-.]/g, "");
+    if (!raw) return { ok: true, value: "" };
+    if (raw.startsWith("+")) {
+      const digits = raw.slice(1);
+      if (!/^[1-9]\d{7,14}$/.test(digits)) return { ok: false, value: "" };
+      if (digits.startsWith("91") && !/^[6-9]\d{9}$/.test(digits.slice(2))) {
+        return { ok: false, value: "" };
+      }
+      return { ok: true, value: `+${digits}` };
     }
-    field?.scrollIntoView({ behavior: "smooth", block: "center" });
-    field?.focus({ preventScroll: true });
-    return false;
+    let digits = raw.replace(/^0+/, "");
+    if (digits.length === 12 && digits.startsWith("91")) digits = digits.slice(2);
+    if (!/^[6-9]\d{9}$/.test(digits)) return { ok: false, value: "" };
+    return { ok: true, value: `+91${digits}` };
+  }
+
+  // Income Tax PAN: AAAAA9999A, where the 4th letter is the holder type
+  // (P individual, C company, H HUF, F firm, T trust, E LLP, …).
+  const PAN_RE = /^[A-Z]{3}[ABCEFGHJKLPT][A-Z]\d{4}[A-Z]$/;
+
+  function isValidPan(value) {
+    return PAN_RE.test(String(value || "").toUpperCase());
+  }
+
+  // Verhoeff check digit tables — the scheme UIDAI uses for Aadhaar numbers.
+  const VERHOEFF_D = [
+    [0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
+    [1, 2, 3, 4, 0, 6, 7, 8, 9, 5],
+    [2, 3, 4, 0, 1, 7, 8, 9, 5, 6],
+    [3, 4, 0, 1, 2, 8, 9, 5, 6, 7],
+    [4, 0, 1, 2, 3, 9, 5, 6, 7, 8],
+    [5, 9, 8, 7, 6, 0, 4, 3, 2, 1],
+    [6, 5, 9, 8, 7, 1, 0, 4, 3, 2],
+    [7, 6, 5, 9, 8, 2, 1, 0, 4, 3],
+    [8, 7, 6, 5, 9, 3, 2, 1, 0, 4],
+    [9, 8, 7, 6, 5, 4, 3, 2, 1, 0],
+  ];
+  const VERHOEFF_P = [
+    [0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
+    [1, 5, 7, 6, 2, 8, 3, 0, 9, 4],
+    [5, 8, 0, 3, 7, 9, 6, 1, 4, 2],
+    [8, 9, 1, 6, 0, 4, 3, 5, 2, 7],
+    [9, 4, 5, 3, 1, 2, 6, 8, 7, 0],
+    [4, 2, 8, 6, 5, 7, 3, 9, 0, 1],
+    [2, 7, 9, 3, 8, 0, 6, 4, 1, 5],
+    [7, 0, 4, 6, 9, 1, 3, 2, 5, 8],
+  ];
+
+  function verhoeffOk(digits) {
+    let checksum = 0;
+    const reversed = digits.split("").reverse();
+    for (let i = 0; i < reversed.length; i += 1) {
+      checksum = VERHOEFF_D[checksum][VERHOEFF_P[i % 8][Number(reversed[i])]];
+    }
+    return checksum === 0;
+  }
+
+  /** UIDAI Aadhaar: 12 digits, never starting 0 or 1, Verhoeff check digit. */
+  function isValidAadhaar(value) {
+    const digits = String(value || "").replace(/\s/g, "");
+    return /^[2-9]\d{11}$/.test(digits) && verhoeffOk(digits);
+  }
+
+  const NAME_RE = /^[\p{L}][\p{L}\p{M}\s.'’-]*$/u;
+
+  function isValidName(value) {
+    const name = String(value || "").trim();
+    return name.length >= 2 && name.length <= 150 && NAME_RE.test(name);
+  }
+
+  function aadhaarDigits() {
+    return fieldValue("[data-donor-aadhar]").replace(/\s/g, "");
+  }
+
+  /**
+   * Every checked field, in the order they appear on screen, so the first
+   * reported problem is also the topmost one. A `check` returns "" when happy.
+   */
+  function donationFieldChecks() {
+    return [
+      {
+        selector: "[data-custom-amount]",
+        label: "Amount",
+        check: () => readAmount().message,
+      },
+      {
+        selector: "[data-donor-first]",
+        check: (v) =>
+          !v
+            ? "First Name is required."
+            : isValidName(v)
+              ? ""
+              : "Use letters, spaces, hyphens or apostrophes only.",
+      },
+      {
+        selector: "[data-donor-last]",
+        check: (v) =>
+          !v || isValidName(v)
+            ? ""
+            : "Use letters, spaces, hyphens or apostrophes only.",
+      },
+      {
+        selector: "[data-donor-email]",
+        check: (v) =>
+          !v
+            ? "Email Address is required."
+            : isValidEmail(v)
+              ? ""
+              : "Enter a valid email address, like name@example.com.",
+      },
+      {
+        selector: "[data-donor-phone]",
+        check: (v) =>
+          !v || normalizePhone(v).ok
+            ? ""
+            : "Enter a 10-digit Indian mobile number, or +country code, or leave it blank.",
+      },
+      {
+        selector: "[data-cause-select]",
+        check: (v) => (v ? "" : "Please select a Cause."),
+      },
+      {
+        selector: "[data-donor-pan]",
+        check: (v) =>
+          !v || isValidPan(v)
+            ? ""
+            : "PAN should look like ABCDE1234F, or leave it blank.",
+      },
+      {
+        selector: "[data-donor-aadhar]",
+        check: () => {
+          const digits = aadhaarDigits();
+          if (!digits) return "";
+          return isValidAadhaar(digits)
+            ? ""
+            : "Enter a valid 12-digit Aadhaar number, or leave it blank.";
+        },
+      },
+      {
+        selector: "[data-payment-type]",
+        check: (v) => (v ? "" : "Please select a Payment Type."),
+      },
+      {
+        selector: "[data-payment-id]",
+        check: (v) => {
+          const rule = paymentIdRule();
+          return !v || !rule.test(v) ? rule.error : "";
+        },
+      },
+      {
+        selector: "[data-fundraiser]",
+        check: (v) => (v ? "" : "Fundraiser is required."),
+      },
+    ];
+  }
+
+  /** Human label for a field, used in the QR lock message. */
+  function fieldLabel(input, fallback) {
+    if (fallback) return fallback;
+    const labelEl = input
+      .closest(".form-field")
+      ?.querySelector(".form-field__label");
+    const text = (labelEl?.textContent || "")
+      .replace(/required/gi, "")
+      .replace(/\*/g, "")
+      .trim();
+    return text || input.getAttribute("aria-label") || input.name || "this field";
+  }
+
+  let errorSlotSeq = 0;
+  const errorSlots = new WeakMap();
+  const erroredInputs = new Set();
+
+  /** The amount box sits in .amount-field, every other field in .form-field. */
+  function fieldWrap(input) {
+    return input.closest(".form-field, .amount-field") || input.parentElement;
+  }
+
+  /** Inline error line for a field, created on demand and wired for a11y. */
+  function errorSlot(input) {
+    const existing = errorSlots.get(input);
+    if (existing && existing.isConnected) return existing;
+    const wrap = fieldWrap(input);
+    if (!wrap) return null;
+    errorSlotSeq += 1;
+    const slot = document.createElement("span");
+    slot.className = "form-field__error";
+    slot.id = `wfd-field-error-${errorSlotSeq}`;
+    // .amount-field is a flex row holding the ₹ sign, so the message goes after it.
+    if (wrap.classList.contains("amount-field")) {
+      wrap.insertAdjacentElement("afterend", slot);
+    } else {
+      wrap.appendChild(slot);
+    }
+    errorSlots.set(input, slot);
+    return slot;
+  }
+
+  function setFieldError(input, message) {
+    if (!input) return;
+    fieldWrap(input)?.classList.add("has-error");
+    input.setAttribute("aria-invalid", "true");
+    erroredInputs.add(input);
+    const slot = errorSlot(input);
+    if (!slot) return;
+    slot.textContent = message;
+    const ids = (input.getAttribute("aria-describedby") || "")
+      .split(/\s+/)
+      .filter(Boolean);
+    if (!ids.includes(slot.id)) {
+      input.setAttribute("aria-describedby", [...ids, slot.id].join(" "));
+    }
+  }
+
+  function clearFieldError(input) {
+    if (!input) return;
+    fieldWrap(input)?.classList.remove("has-error");
+    input.removeAttribute("aria-invalid");
+    const slot = errorSlots.get(input);
+    if (slot) slot.textContent = "";
+    erroredInputs.delete(input);
+  }
+
+  function clearFieldErrors() {
+    [...erroredInputs].forEach(clearFieldError);
+  }
+
+  /** All current problems, topmost first. Fields absent from a page are skipped. */
+  function validateDonationForm() {
+    const problems = [];
+    donationFieldChecks().forEach(({ selector, label, check }) => {
+      const input = document.querySelector(selector);
+      if (!input) return;
+      const message = check(fieldValue(selector), input) || "";
+      if (message) problems.push({ input, message, label: fieldLabel(input, label) });
+    });
+    return problems;
+  }
+
+  function validateOneField(input) {
+    const spec = donationFieldChecks().find(({ selector }) => input.matches(selector));
+    if (!spec) return;
+    const message = spec.check(fieldValue(spec.selector), input) || "";
+    if (message) setFieldError(input, message);
+    else clearFieldError(input);
+  }
+
+  function announceFormNote(message, isError) {
+    const noteEl = document.querySelector("[data-form-note]");
+    if (!noteEl) return;
+    noteEl.textContent = message;
+    noteEl.style.color = isError ? "var(--wfd-primary)" : "";
   }
 
   function setPaidButtonLoading(paidBtn, loading, label) {
@@ -1383,86 +1750,36 @@
 
     clearFieldErrors();
 
+    const problems = validateDonationForm();
+    if (problems.length) {
+      problems.forEach(({ input, message }) => setFieldError(input, message));
+      const [first] = problems;
+      announceFormNote(
+        problems.length === 1
+          ? first.message
+          : `${first.message} ${problems.length} fields need attention.`,
+        true
+      );
+      first.input.scrollIntoView({
+        behavior: reduced ? "auto" : "smooth",
+        block: "center",
+      });
+      first.input.focus({ preventScroll: true });
+      return;
+    }
+
     const firstNow = fieldValue("[data-donor-first]");
     const lastNow = fieldValue("[data-donor-last]");
     const emailNow = fieldValue("[data-donor-email]");
-    const phoneNow = fieldValue("[data-donor-phone]");
+    const phoneNow = normalizePhone(fieldValue("[data-donor-phone]")).value;
     const panNow = fieldValue("[data-donor-pan]").toUpperCase();
-    const aadharNow = fieldValue("[data-donor-aadhar]").replace(/\s/g, "");
+    const aadharNow = aadhaarDigits();
     const cityNow = fieldValue("[data-donor-city]");
-    const pinNow = fieldValue("[data-donor-pin]");
     const paymentTypeNow = getPaymentType();
     const paymentIdNow = fieldValue("[data-payment-id]");
     const fundraiserNow = fieldValue("[data-fundraiser]");
     const causeNow = getDonateCause();
     const amountAfter = getDonateAmount();
-
-    if (!amountAfter || Number(amountAfter) < 1) {
-      failValidation("[data-custom-amount]", "Enter the donation amount.");
-      return;
-    }
-    if (!firstNow) {
-      failValidation("[data-donor-first]", "First Name is required.");
-      return;
-    }
-    if (!emailNow) {
-      failValidation("[data-donor-email]", "Email Address is required.");
-      return;
-    }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailNow)) {
-      failValidation("[data-donor-email]", "Enter a valid email address.");
-      return;
-    }
-    if (!causeNow || causeNow === "Donation") {
-      failValidation("[data-cause-select]", "Please select a Cause.");
-      return;
-    }
-    if (phoneNow && !/^\d{10}$/.test(phoneNow)) {
-      failValidation(
-        "[data-donor-phone]",
-        "Enter a valid 10-digit mobile number, or leave it blank."
-      );
-      return;
-    }
-    if (panNow && !/^[A-Z]{5}\d{4}[A-Z]$/.test(panNow)) {
-      failValidation(
-        "[data-donor-pan]",
-        "PAN should look like ABCDE1234F, or leave it blank."
-      );
-      return;
-    }
-    if (aadharNow && !/^\d{12}$/.test(aadharNow)) {
-      failValidation(
-        "[data-donor-aadhar]",
-        "Aadhar should be 12 digits, or leave it blank."
-      );
-      return;
-    }
-    if (pinNow && !/^\d{6}$/.test(pinNow)) {
-      failValidation(
-        "[data-donor-pin]",
-        "Enter a valid 6-digit pin code, or leave it blank."
-      );
-      return;
-    }
-    if (!paymentTypeNow) {
-      failValidation("[data-payment-type]", "Please select a Payment Type.");
-      return;
-    }
-    if (!paymentIdNow) {
-      const hint = (PAYMENT_ID_LABELS[paymentTypeNow] || [])[1];
-      failValidation(
-        "[data-payment-id]",
-        hint
-          ? `Enter the ${hint.charAt(0).toLowerCase()}${hint.slice(1)}.`
-          : "Enter the Payment Id for this donation."
-      );
-      return;
-    }
-    if (!fundraiserNow) {
-      failValidation("[data-fundraiser]", "Fundraiser is required.");
-      return;
-    }
 
     setPaidButtonLoading(submitBtn, true, "Saving donation…");
 
@@ -1493,7 +1810,6 @@
       pan: optionalField(panNow),
       aadhar: optionalField(aadharNow),
       city: optionalField(cityNow),
-      pinCode: optionalField(pinNow),
       cause: causeNow || "null",
       amount: Number(amountAfter),
       paymentType: optionalField(paymentTypeNow),
@@ -1562,31 +1878,29 @@
    * app after scanning, so gating on it would deadlock the payment.
    */
   function qrBlockers() {
-    const missing = [];
-    if (Number(getDonateAmount() || 0) < 1) missing.push("Amount");
-    if (!fieldValue("[data-donor-first]")) missing.push("First Name");
-    const email = fieldValue("[data-donor-email]");
-    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      missing.push("Email Address");
-    }
-    const cause = getDonateCause();
-    if (!cause || cause === "Donation") missing.push("Cause");
-    const phone = fieldValue("[data-donor-phone]");
-    if (phone && !/^\d{10}$/.test(phone)) missing.push("Phone");
-    const pan = fieldValue("[data-donor-pan]").toUpperCase();
-    if (pan && !/^[A-Z]{5}\d{4}[A-Z]$/.test(pan)) missing.push("PAN No.");
-    const aadhar = fieldValue("[data-donor-aadhar]").replace(/\s/g, "");
-    if (aadhar && !/^\d{12}$/.test(aadhar)) missing.push("Aadhar");
-    const pin = fieldValue("[data-donor-pin]");
-    if (pin && !/^\d{6}$/.test(pin)) missing.push("Pin Code");
-    if (!getPaymentType()) missing.push("Payment Type");
-    if (!fieldValue("[data-fundraiser]")) missing.push("Fundraiser");
-    return missing;
+    return validateDonationForm()
+      .filter(({ input }) => !input.matches("[data-payment-id]"))
+      .map(({ input, label }) => ({ label, empty: !String(input.value || "").trim() }));
   }
 
   function listFields(items) {
     if (items.length === 1) return items[0];
     return `${items.slice(0, -1).join(", ")} and ${items[items.length - 1]}`;
+  }
+
+  /**
+   * An empty field needs filling in; a field that already holds something needs
+   * correcting, so the two groups get different wording.
+   */
+  function blockerSentence(blockers) {
+    const missing = blockers.filter((b) => b.empty).map((b) => b.label);
+    const invalid = blockers.filter((b) => !b.empty).map((b) => b.label);
+    const parts = [];
+    if (missing.length) parts.push(`fill in ${listFields(missing)}`);
+    if (invalid.length) parts.push(`correct ${listFields(invalid)}`);
+    // Each part can itself contain "and", so separate them with a comma.
+    const sentence = parts.join(", and ");
+    return `${sentence.charAt(0).toUpperCase()}${sentence.slice(1)} to unlock the payment QR code.`;
   }
 
   function setUpiActionsEnabled(result, enabled, upiUri) {
@@ -1678,7 +1992,7 @@
         : configMissing
           ? "Set the official UPI ID in js/upi-config.js before taking live donations."
           : locked
-            ? `Fill in ${listFields(blockers)} to unlock the payment QR code.`
+            ? blockerSentence(blockers)
             : "";
     }
 
@@ -1744,13 +2058,23 @@
       resetPaymentDoneButton();
       refreshUpiPayment();
     });
-    // Every required field feeds the QR lock, so re-check on any edit
+    // Every required field feeds the QR lock, so re-check on any edit. Errors
+    // clear while typing and are re-checked once the donor leaves the field.
     upiForm.querySelectorAll("input, select").forEach((el) => {
       el.addEventListener("input", () => {
-        el.closest(".form-field")?.classList.remove("has-error");
+        clearFieldError(el);
         scheduleUpiRefresh();
       });
       el.addEventListener("change", scheduleUpiRefresh);
+      el.addEventListener("blur", () => validateOneField(el));
+    });
+
+    // PAN is always stored uppercase, so show it that way as it is typed.
+    upiForm.querySelector("[data-donor-pan]")?.addEventListener("input", (e) => {
+      const el = e.target;
+      const caret = el.selectionStart;
+      el.value = el.value.toUpperCase();
+      if (caret !== null) el.setSelectionRange(caret, caret);
     });
     // Auto QR on first paint + whenever amount/cause/donor changes
     refreshUpiPayment();
@@ -1841,9 +2165,15 @@
   });
 
   // Photo carousels — random start on each refresh + auto-rotate
-  function startCarousel({ items, dotsWrap, intervalMs, setActive, root }) {
+  function startCarousel({ items, dotsWrap, intervalMs, setActive, root, startIndex }) {
     if (!items.length) return null;
-    const state = { index: Math.floor(Math.random() * items.length), timer: null };
+    const state = {
+      index:
+        typeof startIndex === "number"
+          ? startIndex
+          : Math.floor(Math.random() * items.length),
+      timer: null,
+    };
     const paint = () => {
       setActive(state.index);
       if (dotsWrap) {
@@ -1877,13 +2207,37 @@
     return { go, play, stop };
   }
 
+  /**
+   * Resolve a site-relative path against the document, not the stylesheet.
+   * CSS custom properties used inside url() in a .css file otherwise fetch
+   * from /css/assets/... and 404.
+   */
+  function resolvedCssUrl(path) {
+    try {
+      return `url("${new URL(path, document.baseURI).href}")`;
+    } catch {
+      return `url("${path}")`;
+    }
+  }
+
+  /** Slides past the first carry data-bg and are fetched as they come up. */
+  function hydrateSlide(slide) {
+    if (!slide || !slide.dataset.bg) return;
+    slide.style.backgroundImage = resolvedCssUrl(slide.dataset.bg);
+    delete slide.dataset.bg;
+  }
+
   document.querySelectorAll("[data-hero-carousel]").forEach((hero) => {
     const slides = [...hero.querySelectorAll(".hero__slide")];
     startCarousel({
       items: slides,
       intervalMs: Number(hero.dataset.interval) || 5500,
       root: hero,
+      // Start on the painted slide so the preloaded image is the one shown.
+      startIndex: 0,
       setActive: (i) => {
+        hydrateSlide(slides[i]);
+        hydrateSlide(slides[(i + 1) % slides.length]);
         slides.forEach((slide, n) => slide.classList.toggle("is-active", n === i));
       },
     });
@@ -1927,26 +2281,38 @@
         intervalMs: Number(hero.dataset.interval) || 5000,
         root: hero,
         setActive: (i) => {
-          hero.style.setProperty("--page-hero-image", `url('${images[i]}')`);
+          hero.style.setProperty("--page-hero-image", resolvedCssUrl(images[i]));
         },
       });
   });
 
-  // Festival greeting bar — only on real festival dates from js/festivals.js
+  // Festival greeting bar. js/festivals.js decides the window: it opens a few
+  // days before the festival and closes at midnight once the day is over, so a
+  // page left open overnight is re-checked on a timer rather than sticking.
   const festiveBar = document.querySelector("[data-festive-bar]");
-  const festiveLabel = document.querySelector("[data-festive-label]");
-  const activeFestival = window.WFD_getActiveFestival
-    ? window.WFD_getActiveFestival()
-    : null;
+  if (festiveBar) {
+    const festiveLabel = document.querySelector("[data-festive-label]");
+    let shownId = null;
 
-  if (festiveBar && activeFestival) {
-    festiveBar.hidden = false;
-    festiveBar.classList.add("is-visible");
-    document.body.classList.add("has-festive-bar");
-    if (festiveLabel) {
-      festiveLabel.textContent = `${activeFestival.emojis[0] || "🎉"} ${
-        activeFestival.name
-      }`;
-    }
+    const syncFestiveBar = () => {
+      const festival = window.WFD_getActiveFestival
+        ? window.WFD_getActiveFestival()
+        : null;
+      const id = festival ? festival.id : null;
+      if (id === shownId) return;
+      shownId = id;
+      festiveBar.hidden = !festival;
+      festiveBar.classList.toggle("is-visible", Boolean(festival));
+      document.body.classList.toggle("has-festive-bar", Boolean(festival));
+      if (festival && festiveLabel) {
+        festiveLabel.textContent = `${festival.emojis[0] || "🎉"} ${festival.name}`;
+      }
+    };
+
+    syncFestiveBar();
+    setInterval(syncFestiveBar, 60000);
+    document.addEventListener("visibilitychange", () => {
+      if (!document.hidden) syncFestiveBar();
+    });
   }
 })();
