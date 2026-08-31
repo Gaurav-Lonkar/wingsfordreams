@@ -135,13 +135,20 @@
       hiddenEmp.value = session?.id || "";
     }
 
+    // A signed-in fundraiser gets their name in the field whichever donate mode
+    // the form is in, so long as nobody has typed over it.
     const fundraiser = document.querySelector("[data-fundraiser]");
-    if (fundraiser && session?.name && isEmployeeMode) {
+    if (fundraiser && session?.name) {
       if (!fundraiser.value || fundraiser.dataset.autofill === "1") {
         fundraiser.value = session.name;
         fundraiser.dataset.autofill = "1";
       }
     }
+
+    // Links into the staff screens stay hidden from donors.
+    document.querySelectorAll("[data-staff-only]").forEach((el) => {
+      el.hidden = !session;
+    });
 
     syncDonateModeUI();
   }
@@ -1270,9 +1277,17 @@
 
   const fundraiserFromUrl = fundraiserFromLocation();
   const fundraiserField = document.querySelector("[data-fundraiser]");
-  if (fundraiserField && fundraiserFromUrl) {
-    fundraiserField.value = fundraiserFromUrl;
-    fundraiserField.dataset.autofill = "0";
+  if (fundraiserFromUrl) {
+    // The link owner is the fallback fundraiser: a donor opening /donations/amir/
+    // credits Amir, but a signed-in staff member keeps their own name. Either way
+    // the field stays editable, since the link gets shared around.
+    const signedInName = getSessionEmployee()?.name || "";
+    const untouched =
+      !fundraiserField?.value || fundraiserField.dataset.autofill === "1";
+    if (fundraiserField && !signedInName && untouched) {
+      fundraiserField.value = fundraiserFromUrl;
+      fundraiserField.dataset.autofill = "1";
+    }
     const heroEyebrow = document.querySelector(".page-hero--donate .eyebrow");
     if (heroEyebrow) heroEyebrow.textContent = `Donate · ${fundraiserFromUrl}`;
     const pageTitle = document.querySelector("[data-fundraiser-title]");

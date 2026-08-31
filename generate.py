@@ -87,7 +87,7 @@ def header(active: str, donate_href: str = "donate.html") -> str:
               </div>
             </li>
             <li class="nav__item"><a class="nav__link{act('school')}" href="school-kit.html">Donate School Kit</a></li>
-            <li class="nav__item"><a class="nav__link{act('login')}" href="login.html" data-login-nav>Employee</a></li>
+            <!-- Staff reach login.html by direct URL; it is deliberately not advertised here. -->
           </ul>
           <div class="nav__actions">
             <div class="employee-chip" data-employee-chip hidden></div>
@@ -928,7 +928,7 @@ DONATE_BODY = """
               <div class="payment-success__wa-qr-frame" data-whatsapp-qr-mount aria-hidden="true"></div>
               <p class="payment-success__wa-qr-hint">On desktop? Scan with your phone’s WhatsApp</p>
             </div>
-            <p class="note">Records are saved for <a href="admin.html">Admin → Donations</a>.</p>
+            <p class="note" data-staff-only hidden>Records are saved for <a href="admin.html">Admin → Donations</a>.</p>
           </div>
         </form>
         <p class="donate-bank-link"><a href="banks.html">Prefer bank transfer? See account details</a></p>
@@ -954,9 +954,11 @@ def donate_body(fundraiser: str = "") -> str:
     """Donate body, optionally bound to one fundraiser like the live /donations/amir/ page."""
     if not fundraiser:
         return DONATE_BODY
+    # data-autofill="1" marks the name as ours, so a signed-in staff member's own
+    # name replaces it while anything the donor types is left alone.
     return DONATE_BODY.replace(
         'placeholder="Fundraiser" data-fundraiser',
-        f'placeholder="Fundraiser" value="{fundraiser}" data-fundraiser',
+        f'placeholder="Fundraiser" value="{fundraiser}" data-autofill="1" data-fundraiser',
     ).replace(
         '<p class="eyebrow">Donate</p>',
         f'<p class="eyebrow">Donate \u00b7 {fundraiser}</p>',
